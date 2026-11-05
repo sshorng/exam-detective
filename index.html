@@ -1,0 +1,3645 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>考場抓鬼大師：會考國文題本自主訂正手帳</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-desk: #231C16;
+      --bg-paper: #F6F1E7;
+      --paper-card: #FFFFFF;
+      --paper-border: #DBCFBD;
+      --paper-texture: #EFE7DA;
+      --ink-primary: #2C2219;
+      --ink-muted: #6B5B4E;
+      --amber-gold: #B46513;
+      --amber-light: #FBF4EA;
+      --amber-border: #E8CA9D;
+      --seal-red: #B9382C;
+      --seal-red-bg: #FDEDED;
+      --seal-green: #2C5E43;
+      --seal-green-bg: #EAF4EE;
+      --wood-dark: #3F2F23;
+      --wood-shadow: rgba(35, 28, 22, 0.16);
+      --font-serif: "Noto Serif TC", "Songti TC", serif;
+      --font-sans: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-desk);
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(246, 241, 231, 0.05) 0%, rgba(0, 0, 0, 0.45) 100%),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 8px);
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      line-height: 1.75;
+      letter-spacing: 0.015em;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px;
+    }
+
+    /* 頂部案頭導覽列 */
+    .desk-header {
+      width: 100%;
+      max-width: 980px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      margin-bottom: 14px;
+      background: rgba(44, 34, 25, 0.92);
+      border: 1px solid rgba(219, 207, 189, 0.25);
+      border-radius: 8px;
+      color: #E6DCCD;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+
+    .desk-title {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #F7EAD4;
+    }
+
+    .seal-badge {
+      background: var(--seal-red);
+      color: #FFF;
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .desk-meta {
+      font-size: 0.85rem;
+      color: #C0B09E;
+    }
+
+    /* 主手帳工作容器 */
+    .notebook-container {
+      width: 100%;
+      max-width: 980px;
+      background: var(--bg-paper);
+      border: 2px solid var(--paper-border);
+      border-radius: 12px;
+      box-shadow: 0 10px 32px var(--wood-shadow);
+      padding: 24px;
+      position: relative;
+      margin-bottom: 30px;
+    }
+
+    /* 畫面一：錯題登記台 */
+    .view-card {
+      display: none;
+    }
+    .view-card.active {
+      display: block;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-banner {
+      border-bottom: 2px dashed var(--paper-border);
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+      text-align: center;
+    }
+    .hero-banner h1 {
+      font-family: var(--font-serif);
+      font-size: 1.7rem;
+      color: var(--wood-dark);
+      margin-bottom: 8px;
+    }
+    .hero-banner p {
+      color: var(--ink-muted);
+      font-size: 0.95rem;
+    }
+
+    .case-file-form {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 22px;
+      background: #FFFFFF;
+      padding: 16px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--paper-border);
+      flex-wrap: wrap;
+    }
+    .form-item {
+      flex: 1;
+      min-width: 180px;
+    }
+    .form-item label {
+      display: block;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--ink-muted);
+      margin-bottom: 6px;
+    }
+    .form-item input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+      font-size: 1rem;
+      background: #FFFFFF;
+      color: var(--ink-primary);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-item input:focus {
+      border-color: var(--amber-gold);
+      box-shadow: 0 0 0 2px rgba(180, 101, 19, 0.15);
+    }
+
+    .selector-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--paper-border);
+    }
+    .selector-bar h3 {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      color: var(--wood-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-chip {
+      background: var(--paper-texture);
+      border: 1px solid var(--paper-border);
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--ink-primary);
+      transition: all 0.15s;
+    }
+    .btn-chip:hover {
+      background: #E8DCCB;
+      border-color: #CBB9A3;
+    }
+
+    .grid-42 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .q-box {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .q-box .q-num {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+    .q-box .q-tag {
+      font-size: 0.62rem;
+      color: var(--ink-muted);
+      line-height: 1;
+    }
+    .q-box:hover {
+      border-color: var(--amber-gold);
+      transform: translateY(-1px);
+    }
+    .q-box.selected {
+      background: var(--seal-red-bg);
+      border-color: var(--seal-red);
+    }
+    .q-box.selected .q-num {
+      color: var(--seal-red);
+    }
+    .q-box.selected::after {
+      content: "✕";
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 0.65rem;
+      font-weight: 900;
+      color: var(--seal-red);
+    }
+
+    .start-deck-btn {
+      width: 100%;
+      background: var(--wood-dark);
+      color: #FAF4EB;
+      font-family: var(--font-serif);
+      font-size: 1.18rem;
+      font-weight: 700;
+      padding: 15px 20px;
+      border: 1px solid #2C1E14;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px var(--wood-shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .start-deck-btn:hover {
+      background: #4F3C2C;
+      transform: translateY(-2px);
+    }
+
+    /* 畫面二：作答現場 */
+    .investigate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--paper-border);
+    }
+    .case-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .case-badge {
+      background: var(--wood-dark);
+      color: #FAF4EB;
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 4px 12px;
+      border-radius: 4px;
+    }
+    .category-badge {
+      background: var(--amber-light);
+      border: 1px solid var(--amber-border);
+      color: var(--amber-gold);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+    .progress-status {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+
+    /* 題組選文卡片（僅題組題顯示） */
+    .passage-card {
+      background: #FAF8F4;
+      border: 1.5px solid var(--amber-border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .passage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .passage-title {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--amber-gold);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .zoom-hint {
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .zoom-hint:hover {
+      color: var(--amber-gold);
+    }
+    .passage-img-wrapper, .stem-img-wrapper {
+      width: 100%;
+      text-align: center;
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+      padding: 8px;
+      cursor: zoom-in;
+      overflow: hidden;
+    }
+    .passage-img-wrapper img, .stem-img-wrapper img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border-radius: 4px;
+    }
+
+    /* 題目題幹卡片 */
+    .stem-card {
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .stem-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .stem-label {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--wood-dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 步驟大標籤 */
+    .step-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--wood-dark);
+      margin-bottom: 14px;
+    }
+    .step-num {
+      background: var(--wood-dark);
+      color: #FFF;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    /* 步驟一：完整選項直列選取列表 */
+    .ans-choice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .full-option-btn {
+      background: #FFFFFF;
+      border: 1.5px solid var(--paper-border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      text-align: left;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      color: var(--ink-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      transition: all 0.15s;
+    }
+    .full-option-btn .opt-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--paper-texture);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .full-option-btn:hover:not(:disabled) {
+      border-color: var(--amber-gold);
+      background: #FCF9F3;
+      transform: translateX(3px);
+    }
+    .full-option-btn.selected-correct {
+      border-color: var(--seal-green) !important;
+      background: var(--seal-green-bg) !important;
+      color: #17422C !important;
+      font-weight: 600;
+    }
+    .full-option-btn.selected-correct .opt-badge {
+      background: var(--seal-green) !important;
+      color: #FFF !important;
+    }
+    .full-option-btn.shaking {
+      animation: shake 0.4s ease-in-out;
+      border-color: var(--seal-red);
+      background: var(--seal-red-bg);
+    }
+    .full-option-btn.readonly {
+      cursor: default;
+    }
+    .full-option-btn.readonly:hover {
+      border-color: var(--paper-border);
+      background: #FFFFFF;
+      transform: none;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .ans-feedback {
+      background: var(--seal-green-bg);
+      border: 1px solid #B8DAC6;
+      border-radius: 8px;
+      padding: 14px 18px;
+      color: #1C4831;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .ans-feedback.show {
+      display: flex;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    /* 步驟二：其餘三個錯誤選項 死穴字詞找碴 */
+    .ghost-section {
+      display: none;
+      border-top: 2px dashed var(--paper-border);
+      padding-top: 24px;
+      margin-bottom: 24px;
+    }
+    .ghost-section.show {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .analysis-title {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--wood-dark);
+      margin-bottom: 12px;
+      padding-left: 10px;
+      border-left: 3px solid var(--seal-red);
+      line-height: 1.3;
+    }
+
+    .ghost-card {
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      transition: all 0.2s;
+    }
+    .ghost-card.cleared {
+      border-color: var(--seal-green);
+      background: #FAFDFB;
+    }
+
+    .ghost-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .ghost-opt-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--wood-dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ghost-status-tag {
+      font-size: 0.78rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .ghost-status-tag.waiting {
+      background: var(--paper-texture);
+      color: var(--ink-muted);
+    }
+    .ghost-status-tag.busted {
+      background: var(--seal-red);
+      color: #FFFFFF;
+    }
+
+    /* 自然斷詞詞元流 */
+    .token-flow {
+      line-height: 2.1;
+      font-size: 1.02rem;
+      color: var(--ink-primary);
+      margin-bottom: 12px;
+      background: #FAF8F5;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid #ECE3D7;
+    }
+
+    .word-token {
+      display: inline-block;
+      padding: 2px 5px;
+      margin: 1px 2px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      cursor: default;
+      user-select: text;
+    }
+    .word-token.busted-token {
+      background: var(--seal-red) !important;
+      color: #FFFFFF !important;
+      font-weight: 700;
+      border-color: #8C1C13 !important;
+      text-decoration: underline;
+      cursor: default;
+      box-shadow: 0 2px 6px rgba(185, 56, 44, 0.3);
+    }
+
+    .trap-reveal {
+      display: none;
+      background: var(--seal-red-bg);
+      border-left: 3px solid var(--seal-red);
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.9rem;
+      color: #7A1910;
+      line-height: 1.6;
+    }
+    .trap-reveal.show {
+      display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    /* 步驟二：類題挑戰 */
+    .drill-section {
+      display: none;
+      border-top: 2px dashed var(--paper-border);
+      padding-top: 24px;
+      margin-bottom: 24px;
+    }
+    .drill-card {
+      background: #FFFDF8;
+      border: 1.5px solid var(--amber-border);
+      border-radius: 10px;
+      padding: 20px 22px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+    .drill-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .drill-badge {
+      background: var(--wood-dark);
+      color: #FFFFFF;
+      font-family: var(--font-sans);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .drill-source {
+      font-size: 0.76rem;
+      color: var(--ink-muted);
+    }
+    .drill-stem {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      line-height: 1.95;
+      color: var(--ink-primary);
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+    .drill-source-box {
+      margin-bottom: 14px;
+    }
+    .drill-passage {
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 0.92rem;
+      line-height: 1.95;
+    }
+    .drill-passage-title {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      color: var(--wood-dark);
+      margin-bottom: 8px;
+      padding-left: 9px;
+      border-left: 3px solid var(--amber-gold);
+      line-height: 1.4;
+    }
+    .drill-passage .tx-p {
+      font-size: 0.92rem;
+      line-height: 1.95;
+    }
+    .drill-passage .tx-q {
+      margin-bottom: 10px;
+    }
+    .drill-figure {
+      text-align: center;
+      margin: 0 0 12px;
+    }
+    .drill-figure img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+    }
+    .drill-figure figcaption {
+      font-size: 0.76rem;
+      color: var(--ink-muted);
+      margin-top: 4px;
+    }
+
+    /* 類題前預告頁 */
+    .drill-intro-card {
+      max-width: 720px;
+      margin: 20px auto;
+      text-align: center;
+      padding: 30px 24px;
+    }
+    .drill-intro-seal {
+      display: inline-block;
+      background: var(--seal-green);
+      color: #FFFFFF;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    .drill-intro-title {
+      font-family: var(--font-serif);
+      font-size: 1.9rem;
+      color: var(--wood-dark);
+      margin-bottom: 10px;
+    }
+    .drill-intro-sub {
+      font-size: 0.96rem;
+      line-height: 1.9;
+      color: var(--ink-muted);
+      max-width: 540px;
+      margin: 0 auto 24px;
+    }
+    .drill-intro-stats {
+      display: flex;
+      justify-content: center;
+      gap: 42px;
+      margin: 0 0 26px;
+    }
+    .drill-intro-stats strong {
+      display: block;
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      color: var(--seal-red);
+      line-height: 1.2;
+    }
+    .drill-intro-stats span {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+    }
+    .drill-intro-rules {
+      text-align: left;
+      max-width: 540px;
+      margin: 0 auto 26px;
+      padding-left: 1.2em;
+      font-size: 0.9rem;
+      line-height: 2;
+      color: var(--ink-primary);
+    }
+    .drill-intro-rules li {
+      margin-bottom: 2px;
+    }
+    .drill-intro-card .start-deck-btn {
+      max-width: 420px;
+      margin: 0 auto 12px;
+    }
+
+    /* 類題模式 */
+    .drill-mode-card {
+      max-width: 980px;
+      margin: 0 auto;
+    }    .drill-mode-note {
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: var(--ink-muted);
+      margin: 4px 0 18px;
+    }
+    .drill-mode-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .drill-mode-nav .btn-nav {
+      flex: 1;
+      min-width: 130px;
+    }
+    .drill-options {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .drill-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      width: 100%;
+      background: #FFFFFF;
+      border: 1.5px solid var(--paper-border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      text-align: left;
+      font-family: var(--font-sans);
+      font-size: 0.94rem;
+      line-height: 1.7;
+      color: var(--ink-primary);
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    .drill-option:hover:not(:disabled) {
+      border-color: var(--amber-gold);
+      background: #FCF9F3;
+    }
+    .drill-option:disabled {
+      cursor: default;
+    }
+    .drill-letter {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--paper-texture);
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .drill-option.is-correct {
+      border-color: var(--seal-green);
+      background: var(--seal-green-bg);
+    }
+    .drill-option.is-correct .drill-letter {
+      background: var(--seal-green);
+      color: #FFFFFF;
+    }
+    .drill-option.is-wrong {
+      border-color: var(--seal-red);
+      background: var(--seal-red-bg);
+    }
+    .drill-option.is-wrong .drill-letter {
+      background: var(--seal-red);
+      color: #FFFFFF;
+    }
+    .drill-feedback {
+      display: none;
+      margin-top: 14px;
+      border-radius: 8px;
+      padding: 12px 15px;
+      font-size: 0.9rem;
+      line-height: 1.75;
+    }
+    .drill-feedback.show {
+      display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .drill-feedback.correct {
+      background: var(--seal-green-bg);
+      border: 1px solid #B8DAC6;
+      color: #17422C;
+    }
+    .drill-feedback.wrong {
+      background: var(--seal-red-bg);
+      border: 1px solid #E8A8A2;
+      color: #7A1910;
+    }
+    .drill-result {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .drill-explain + .drill-explain {
+      margin-top: 5px;
+    }
+
+    /* 快速跳題（標題列橫排） */
+    .jump-inline {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      overflow-x: auto;
+      padding: 2px 0;
+      min-width: 120px;
+      scrollbar-width: thin;
+    }
+    .jump-inline::-webkit-scrollbar {
+      height: 4px;
+    }
+    .jump-inline::-webkit-scrollbar-thumb {
+      background: #D8C7AF;
+      border-radius: 2px;
+    }
+    .jump-chip {
+      flex: 0 0 auto;
+      min-width: 30px;
+      height: 28px;
+      padding: 0 8px;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+      background: #FFFFFF;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      cursor: pointer;
+      position: relative;
+    }
+    .jump-chip:hover {
+      border-color: var(--amber-gold);
+      background: #FCF9F3;
+    }
+    .jump-chip.current {
+      background: var(--wood-dark);
+      color: #FFFFFF;
+      border-color: var(--wood-dark);
+    }
+    .jump-chip.done {
+      color: var(--wood-dark);
+      border-color: #B8DAC6;
+      background: #F4FBF6;
+    }
+    .jump-chip.done::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--seal-green);
+    }
+    .jump-chip.current.done::after {
+      background: #9FE0BC;
+    }
+    .jump-chip.all {
+      color: var(--wood-dark);
+      background: #F7E8C4;
+      border-color: var(--amber-border);
+    }
+    .jump-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 20, 10, 0.45);
+      z-index: 650;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .jump-overlay.show {
+      display: flex;
+    }
+    .jump-panel {
+      background: #FFFDF8;
+      border-radius: 14px;
+      width: min(560px, 100%);
+      max-height: 82vh;
+      overflow: auto;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .jump-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-serif);
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--wood-dark);
+      margin-bottom: 14px;
+    }
+    .jump-close {
+      border: none;
+      background: transparent;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--ink-muted);
+      padding: 2px 6px;
+    }
+    .jump-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+      gap: 8px;
+    }
+    .jump-item {
+      position: relative;
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 8px;
+      padding: 9px 0;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--ink-primary);
+      cursor: pointer;
+    }
+    .jump-item:hover {
+      border-color: var(--amber-gold);
+      background: #FCF9F3;
+    }
+    .jump-item.current {
+      background: var(--wood-dark);
+      color: #FFFFFF;
+      border-color: var(--wood-dark);
+    }
+    .jump-item.done::after {
+      content: "";
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--seal-green);
+    }
+    .jump-item.todo {
+      color: #A08B6B;
+    }
+    .jump-legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 0.74rem;
+      color: var(--ink-muted);
+      margin-top: 14px;
+    }
+    .jdot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    .jdot.current {
+      background: var(--wood-dark);
+    }
+    .jdot.done {
+      background: var(--seal-green);
+    }
+    .jdot.todo {
+      background: #D8C7AF;
+    }
+
+    /* 類題自由練 */
+    .practice-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      background: #FBF7EF;
+      border: 1px dashed var(--amber-border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 18px 0;
+    }
+    .practice-entry-text {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .practice-entry-text strong {
+      font-family: var(--font-serif);
+      color: var(--wood-dark);
+      font-size: 1rem;
+    }
+    .practice-entry-text span {
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+    }
+    .practice-page {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .practice-page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--paper-border);
+    }
+    .practice-page-title {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      color: var(--wood-dark);
+      margin-bottom: 4px;
+    }
+    .practice-page-sub {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: var(--ink-muted);
+    }
+    .practice-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .practice-toolbar select {
+      flex: 1;
+      min-width: 180px;
+      padding: 9px 11px;
+      border: 1px solid var(--paper-border);
+      border-radius: 7px;
+      background: #FFFFFF;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      color: var(--ink-primary);
+    }
+    .practice-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .practice-item {
+      text-align: left;
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .practice-item:hover {
+      border-color: var(--amber-gold);
+      background: #FCF9F3;
+    }
+    .practice-item .pi-q {
+      font-weight: 700;
+      color: var(--wood-dark);
+      font-size: 0.86rem;
+    }
+    .practice-item .pi-c {
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+    }
+    .practice-item .pi-s {
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .practice-item.correct {
+      border-color: #B8DAC6;
+      background: #F4FBF6;
+    }
+    .practice-item.wrong {
+      border-color: #E8A8A2;
+      background: #FDF3F2;
+    }
+    .practice-item.correct .pi-s {
+      color: #1C4831;
+    }
+    .practice-item.wrong .pi-s {
+      color: #7A1910;
+    }
+    .practice-back {
+      background: none;
+      border: none;
+      color: var(--wood-dark);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 0 0 12px;
+    }
+    .practice-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* 步驟三：題本紅筆硃批核驗 */
+    .notebook-section {
+      display: none;
+      border-top: 2px dashed var(--paper-border);
+      padding-top: 24px;
+      margin-bottom: 24px;
+    }
+    .notebook-section.show {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .gold-note-card {
+      background: #FFFFFF;
+      border: 2px solid var(--seal-red);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(185, 56, 44, 0.08);
+      position: relative;
+      margin-bottom: 18px;
+    }
+    .gold-note-badge {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: var(--seal-red);
+      color: #FFF;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 4px;
+    }
+    .gold-instruction {
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+      margin-bottom: 10px;
+      margin-top: 4px;
+    }
+    .gold-text {
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: var(--seal-red);
+      letter-spacing: 0.03em;
+      background: #FAF2F2;
+      padding: 12px 18px;
+      border-radius: 6px;
+      border: 1px dashed #E8A8A2;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .gold-tip {
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      text-align: center;
+    }
+
+    /* 一鍵蓋章按鈕（零打字） */
+    .stamp-action-btn {
+      width: 100%;
+      background: var(--seal-red);
+      color: #FFFFFF;
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      font-weight: 700;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 4px 14px rgba(185, 56, 44, 0.3);
+      transition: all 0.2s;
+    }
+    .stamp-action-btn:hover {
+      background: #A02B20;
+      transform: translateY(-2px);
+    }
+    .stamp-action-btn:active {
+      transform: translateY(1px);
+    }
+    .stamp-action-btn:disabled {
+      background: #C9A8A3;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .stamp-action-btn:disabled:hover {
+      background: #C9A8A3;
+      transform: none;
+    }
+
+    /* 蓋章成功印泥效果 */
+    .stamped-indicator {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    .stamped-indicator.show {
+      display: block;
+      animation: stampDrop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes stampDrop {
+      0% { opacity: 0; transform: scale(2.2) rotate(-15deg); }
+      100% { opacity: 1; transform: scale(1) rotate(-6deg); }
+    }
+    .big-seal {
+      display: inline-block;
+      border: 3px solid var(--seal-red);
+      color: var(--seal-red);
+      padding: 8px 24px;
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      border-radius: 6px;
+      background: rgba(185, 56, 44, 0.05);
+      box-shadow: inset 0 0 10px rgba(185, 56, 44, 0.1);
+    }
+
+    /* 導覽切換列 */
+    .nav-bar-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--paper-border);
+    }
+    .btn-nav {
+      background: var(--paper-texture);
+      border: 1px solid var(--paper-border);
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      color: var(--ink-primary);
+      transition: all 0.15s;
+    }
+    .btn-nav:hover:not(:disabled) {
+      background: #E5D8C5;
+      border-color: #CBB9A3;
+    }
+    .btn-nav:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* 畫面三：結算戰報 */
+    .report-card {
+      text-align: center;
+    }
+    .report-seal-top {
+      display: inline-block;
+      margin-bottom: 14px;
+    }
+    .report-title {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      color: var(--wood-dark);
+      margin-bottom: 8px;
+    }
+    .report-subtitle {
+      color: var(--ink-muted);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--wood-dark);
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+    }
+
+    .report-records {
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 8px;
+      padding: 18px;
+      text-align: left;
+      margin-bottom: 24px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .report-drill-summary {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      margin: -8px 0 18px;
+      line-height: 1.7;
+    }
+    .record-row {
+      display: flex;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--paper-border);
+      font-size: 0.92rem;
+      gap: 12px;
+    }
+    .record-row:last-child {
+      border-bottom: none;
+    }
+    .rec-q {
+      font-weight: 700;
+      color: var(--wood-dark);
+      min-width: 55px;
+    }
+    .rec-ans {
+      color: var(--seal-green);
+      font-weight: 700;
+      min-width: 40px;
+    }
+    .rec-note {
+      color: var(--ink-primary);
+      flex: 1;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-action-primary {
+      background: var(--wood-dark);
+      color: #FAF4EB;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .btn-action-primary:hover {
+      background: #4F3C2C;
+    }
+
+    /* 圖片放大燈箱 Modal */
+    .image-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(20, 15, 10, 0.88);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .image-modal-overlay.active {
+      display: flex;
+    }
+    .modal-content-wrapper {
+      max-width: 95vw;
+      max-height: 92vh;
+      overflow: auto;
+      background: #FAF8F5;
+      padding: 12px;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    .modal-content-wrapper img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--wood-dark);
+      color: #FFF;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* 氣泡訊息浮層 Toast */
+    .toast-box {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--wood-dark);
+      color: #FAF4EB;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+      z-index: 10000;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+    .toast-box.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===== 題幹文字版 ===== */
+    .stem-mode-switch {
+      display: flex;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .mode-btn {
+      background: #FFFFFF;
+      border: none;
+      padding: 5px 13px;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .mode-btn + .mode-btn {
+      border-left: 1px solid var(--paper-border);
+    }
+    .mode-btn:hover:not(.active) {
+      background: #F5EEE2;
+    }
+    .mode-btn.active {
+      background: var(--wood-dark);
+      color: #FAF4EB;
+      font-weight: 700;
+    }
+
+    .stem-tools,
+    .passage-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .trans-toggle {
+      display: none;
+      align-items: center;
+      background: #FFFDF8;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+      padding: 5px 11px;
+      font-family: var(--font-sans);
+      font-size: 0.76rem;
+      color: #8A6520;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .trans-toggle:hover {
+      background: #F7E8C4;
+    }
+
+    /* 文言逐句語譯（直接接在句子下方） */
+    .cls-pair {
+      display: inline;
+    }
+    .cls-src {
+      display: inline;
+    }
+    .cls-tr {
+      display: block;
+      margin: 3px 0 13px;
+      padding: 5px 12px 5px 10px;
+      border-left: 3px solid #E2C48A;
+      background: #FAF6EC;
+      border-radius: 0 5px 5px 0;
+      font-family: var(--font-sans);
+      font-size: 0.86rem;
+      line-height: 1.8;
+      color: #5E4B33;
+      text-indent: 0;
+      letter-spacing: 0;
+      text-align: justify;
+    }
+    .cls-tr::before {
+      content: "語譯";
+      display: inline-block;
+      font-size: 0.66rem;
+      font-weight: 700;
+      color: #8A6520;
+      background: #F0E2C2;
+      border-radius: 3px;
+      padding: 1px 6px;
+      margin-right: 8px;
+      vertical-align: 1px;
+    }
+
+    /* 圖片題的關鍵詞 chips */
+    .img-kw-chips {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      padding: 12px 2px 2px;
+    }
+    .img-kw-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      margin-right: 2px;
+    }
+    .kw-chip {
+      background: #FFFDF8;
+      border: 1px solid var(--amber-border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      color: var(--wood-dark);
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+    .kw-chip:hover {
+      background: #F7E8C4;
+    }
+    .kw-chip.active {
+      background: #F7E8C4;
+      border-color: var(--amber-gold);
+    }
+
+    .extra-hint {
+      margin-top: 14px;
+      background: #FFF8E8;
+      border: 1px solid #EBD9A8;
+      border-radius: 6px;
+      padding: 9px 13px;
+      font-size: 0.84rem;
+      line-height: 1.7;
+      color: #7A5A12;
+    }
+
+    .stem-text-view,
+    .passage-text-view {
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+      padding: 18px 22px;
+    }
+
+    .tx-p {
+      font-size: 0.98rem;
+      line-height: 2.05;
+      text-align: justify;
+      text-indent: 2em;
+      margin-bottom: 0.55em;
+      color: var(--ink-primary);
+    }
+    .tx-p:last-child {
+      margin-bottom: 0;
+    }
+
+    .tx-q {
+      background: #FAF8F3;
+      border: 1px solid #E7DAC8;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin: 0 0 14px;
+      font-family: var(--font-serif);
+      font-size: 0.99rem;
+      line-height: 2.1;
+      text-align: justify;
+      white-space: pre-line;
+      color: var(--ink-primary);
+    }
+    .tx-q .tx-src {
+      margin-top: 8px;
+      margin-bottom: 0;
+    }
+    .tx-tag {
+      display: inline-block;
+      background: var(--wood-dark);
+      color: #FFFFFF;
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 1px 8px;
+      border-radius: 3px;
+      margin-right: 9px;
+      vertical-align: 2px;
+      text-indent: 0;
+    }
+
+    .tx-h {
+      font-family: var(--font-serif);
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--wood-dark);
+      margin: 18px 0 7px;
+      padding-left: 10px;
+      border-left: 3px solid var(--amber-gold);
+      line-height: 1.3;
+    }
+    .tx-h:first-child {
+      margin-top: 0;
+    }
+
+    .tx-ul {
+      margin: 0 0 12px;
+      padding-left: 1.4em;
+    }
+    .tx-li {
+      font-size: 0.96rem;
+      line-height: 1.95;
+      margin-bottom: 2px;
+    }
+
+    .tx-src {
+      text-align: right;
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      margin: 2px 0 12px;
+    }
+
+    .tx-table-wrap {
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+    .tx-table-title {
+      font-family: var(--font-serif);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--wood-dark);
+      margin-bottom: 6px;
+    }
+    .tx-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.9rem;
+      background: #FFFFFF;
+    }
+    .tx-table th {
+      background: #F3ECE0;
+      border: 1px solid var(--paper-border);
+      padding: 7px 10px;
+      font-weight: 700;
+      color: var(--wood-dark);
+    }
+    .tx-table td {
+      border: 1px solid var(--paper-border);
+      padding: 7px 10px;
+      text-align: center;
+      color: var(--ink-primary);
+    }
+
+    .tx-img {
+      text-align: center;
+      margin: 14px 0;
+    }
+    .tx-img img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+    }
+    .tx-img figcaption {
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      margin-top: 6px;
+    }
+
+    .tx-chat {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      background: #F6F2EA;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 14px;
+    }
+    .tx-chat-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .tx-chat-who {
+      flex-shrink: 0;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--wood-dark);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .tx-chat-bubble {
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 0 10px 10px 10px;
+      padding: 9px 15px;
+      font-size: 0.94rem;
+      line-height: 1.95;
+      white-space: pre-line;
+      color: var(--ink-primary);
+    }
+
+    .tx-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 14px;
+    }
+
+    /* 行內關鍵詞標記 */
+    .ink-mark {
+      background: #FBF0CC;
+      border-bottom: 2px solid var(--amber-gold);
+      color: inherit;
+      padding: 0 1px;
+      border-radius: 2px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+    .ink-mark:hover,
+    .ink-mark.active {
+      background: #F6DFA0;
+    }
+
+    /* ===== 關鍵詞浮動說明 ===== */
+    .kw-pop {
+      position: fixed;
+      z-index: 500;
+      width: 290px;
+      max-width: calc(100vw - 24px);
+      background: #FFFDF8;
+      border: 1.5px solid var(--amber-border);
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(46, 32, 18, 0.18);
+      padding: 14px 16px 15px;
+      display: none;
+    }
+    .kw-pop.show {
+      display: block;
+    }
+    .kw-pop-head {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      flex-wrap: wrap;
+      padding-right: 18px;
+      margin-bottom: 8px;
+    }
+    .kw-pop-word {
+      font-family: var(--font-serif);
+      font-size: 1.06rem;
+      font-weight: 700;
+      color: var(--wood-dark);
+      line-height: 1.4;
+    }
+    .kw-pop-fn {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #8A6520;
+      background: #F7E8C4;
+      border-radius: 999px;
+      padding: 2px 9px;
+      white-space: nowrap;
+    }
+    .kw-pop-body {
+      font-size: 0.9rem;
+      line-height: 1.85;
+      color: var(--ink-primary);
+      text-align: justify;
+    }
+    .kw-pop-extra {
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px dashed #E7DAC8;
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      line-height: 1.7;
+    }
+    .kw-pop-copy {
+      display: none;
+      margin-top: 8px;
+      background: #F7E8C4;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: #6B4E16;
+      text-align: justify;
+    }
+    .kw-pop-close {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      border: none;
+      background: transparent;
+      color: var(--ink-muted);
+      font-size: 1.15rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    .kw-pop-close:hover {
+      color: var(--wood-dark);
+    }
+    .kw-pop-tip {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: #A08B6B;
+      text-align: right;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 8px;
+      }
+      .tx-cols {
+        grid-template-columns: 1fr;
+      }
+      .stem-text-view,
+      .passage-text-view {
+        padding: 14px 15px;
+      }
+      .drill-card {
+        padding: 16px 15px;
+      }
+      .jump-panel {
+        padding: 16px;
+      }
+      .jump-inline {
+        flex-basis: 100%;
+        order: 3;
+      }
+      .practice-grid {
+        grid-template-columns: 1fr;
+      }
+      .notebook-container {
+        padding: 16px;
+      }
+      .grid-42 {
+        grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+        gap: 6px;
+      }
+      .summary-stats {
+        grid-template-columns: 1fr;
+      }
+      .desk-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部案頭導覽列 -->
+  <header class="desk-header">
+    <div class="desk-title">
+      <span>考場抓鬼大師</span>
+      <span class="seal-badge">九年級會考國文模擬考</span>
+    </div>
+    <div class="desk-meta" id="headerMeta">
+      第 1 至 3 冊複習・42 題全解析題本
+    </div>
+  </header>
+
+  <!-- 主手帳工作容器 -->
+  <main class="notebook-container">
+
+    <!-- 畫面一：錯題登記台 -->
+    <section id="viewSetup" class="view-card active">
+      <div class="hero-banner">
+        <h1>會考國文試卷・錯題平反案卷</h1>
+        <p>平板原卷高畫質影印・文言逐句語譯・錯項詳解・類題遷移・實體題本紅筆硃批</p>
+      </div>
+
+      <div class="case-file-form">
+        <div class="form-item">
+          <label for="studentName">偵探考生姓名</label>
+          <input type="text" id="studentName" placeholder="請輸入姓名" value="">
+        </div>
+        <div class="form-item">
+          <label for="studentSeat">座號</label>
+          <input type="text" id="studentSeat" placeholder="例：05" value="">
+        </div>
+      </div>
+
+      <div class="selector-bar">
+        <h3>
+          <span>勾選今日需訂正的題號</span>
+          <span style="font-size:0.85rem; font-weight:normal; color:var(--ink-muted);" id="selectedCountLabel">（已選 0 題）</span>
+        </h3>
+        <div class="quick-actions">
+          <button type="button" class="btn-chip" onclick="App.selectAll()">全選 42 題</button>
+          <button type="button" class="btn-chip" onclick="App.selectReading()">只選題組（25至42題）</button>
+          <button type="button" class="btn-chip" onclick="App.selectClassical()">只選文言文（15 題）</button>
+          <button type="button" class="btn-chip" onclick="App.clearSelection()">清空</button>
+        </div>
+      </div>
+
+      <!-- 42 題方格選取器 -->
+      <div class="grid-42" id="grid42"></div>
+
+      <button type="button" class="start-deck-btn" onclick="App.startInvestigation()">
+        <span>展開神探卷宗・進入訂正現場</span>
+        <span>➔</span>
+      </button>
+    </section>
+
+    <!-- 畫面二：作答審查現場 -->
+    <section id="viewInvestigate" class="view-card">
+      <div class="investigate-header">
+        <div class="case-badge-group">
+          <span class="case-badge" id="caseBadge">第 1 題</span>
+          <span class="category-badge" id="categoryBadge">成語熟語</span>
+        </div>
+        <div class="jump-inline" id="jumpInline"></div>
+        <div class="progress-status" id="progressStatus">
+          進度：1 / 1
+        </div>
+      </div>
+
+      <!-- 題組選文卡片（僅題組題顯示） -->
+      <div class="passage-card" id="passageCard" style="display:none;">
+        <div class="passage-header">
+          <span class="passage-title" id="passageTitleText">【題組選文】</span>
+          <div class="passage-tools">
+            <button type="button" class="trans-toggle" id="passageTransToggle" style="display:none;" onclick="App.toggleTrans()">隱藏語譯</button>
+            <div class="stem-mode-switch" id="passageModeSwitch" style="display:none;">
+              <button type="button" class="mode-btn active" data-mode="text" onclick="App.setStemMode('text')">文字版</button>
+              <button type="button" class="mode-btn" data-mode="image" onclick="App.setStemMode('image')">原卷影本</button>
+            </div>
+          </div>
+        </div>
+        <div class="passage-text-view" id="passageTextView"></div>
+        <div class="passage-img-wrapper" id="passageImageView" onclick="App.zoomPassage()">
+          <img id="passageImg" src="" alt="題組選文影本">
+        </div>
+        <div class="img-kw-chips" id="passageImgChips" style="display:none;"></div>
+      </div>
+
+      <!-- 題幹本體卡片（文字版預設，可切回原卷影本） -->
+      <div class="stem-card">
+        <div class="stem-label-row">
+          <span class="stem-label">📖 題本</span>
+          <div class="stem-tools">
+            <button type="button" class="trans-toggle" id="stemTransToggle" style="display:none;" onclick="App.toggleTrans()">隱藏語譯</button>
+            <div class="stem-mode-switch" id="stemModeSwitch" style="display:none;">
+              <button type="button" class="mode-btn active" data-mode="text" onclick="App.setStemMode('text')">文字版</button>
+              <button type="button" class="mode-btn" data-mode="image" onclick="App.setStemMode('image')">原卷影本</button>
+            </div>
+          </div>
+        </div>
+        <div class="stem-text-view" id="stemTextView"></div>
+        <div class="stem-img-wrapper" id="stemImageView" onclick="App.zoomStem()">
+          <img id="stemImg" src="" alt="題幹影本">
+        </div>
+        <div class="img-kw-chips" id="stemImgChips" style="display:none;"></div>
+      </div>
+
+      <!-- 第 0 步：語譯掃描台已整併進文本，逐句語譯直接顯示在句子下方 -->
+
+      <!-- 步驟一：正解與詳解 -->
+      <div class="step-banner">
+        <span class="step-num">1</span>
+        <span>第一步：先選出正解，選對才解鎖詳解與題本硃批</span>
+      </div>
+
+      <div class="ans-choice-list" id="ansChoiceList"></div>
+
+      <div class="ans-feedback" id="ansFeedback">
+        <span style="font-size:1.3rem;">🎯</span>
+        <div id="ansFeedbackText">正解與詳解</div>
+      </div>
+
+      <!-- 錯項詳解（直接顯示，不需點選） -->
+      <div class="ghost-section" id="ghostSection">
+        <div class="analysis-title">錯項詳解</div>
+        <div id="ghostCardsContainer"></div>
+      </div>
+
+      <!-- 步驟二：題本紅筆硃批核驗 ＆ 一鍵蓋章 -->
+      <div class="notebook-section" id="notebookSection">
+        <div class="step-banner">
+          <span class="step-num" id="notebookStepNum">2</span>
+          <span id="notebookStepText">第二步：實體題本紅筆硃批核驗・單鍵蓋章結案</span>
+        </div>
+
+        <div class="gold-note-card">
+          <span class="gold-note-badge">題本硃批指令</span>
+          <div class="gold-instruction" id="goldInstruction">請在實體題本本題空白處，用紅筆抄寫以下破案金句：</div>
+          <div class="gold-text" id="goldText">（待解鎖）</div>
+          <div class="gold-tip">抄寫完畢後，點擊下方大按鈕蓋章結案，無需在平板上辛苦打字！</div>
+        </div>
+
+        <button type="button" class="stamp-action-btn" id="stampActionBtn" onclick="App.stampAndFinish()">
+          <span id="stampBtnText">我已在實體題本完成紅筆硃批・點此蓋章結案！</span>
+          <span style="font-size:1.3rem;">🈴</span>
+        </button>
+
+        <div class="stamped-indicator" id="stampedIndicator">
+          <span class="big-seal">硃批已錄・案結</span>
+        </div>
+      </div>
+
+      <!-- 導覽切換列 -->
+      <div class="nav-bar-footer">
+        <button type="button" class="btn-nav" id="btnPrev" onclick="App.prevQuestion()">上一步／前一題</button>
+        <button type="button" class="btn-nav" onclick="App.showSetup()">返回題號清單</button>
+        <button type="button" class="btn-nav" id="btnNext" onclick="App.nextQuestion()">下一題 ➔</button>
+      </div>
+    </section>
+
+    <!-- 類題前預告頁 -->
+    <section id="viewDrillIntro" class="view-card">
+      <div class="drill-intro-card">
+        <span class="drill-intro-seal">詳解完成</span>
+        <h2 class="drill-intro-title">接下來，換你動手</h2>
+        <p class="drill-intro-sub">所有勾選題目的詳解與題本硃批都完成了。現在進入類題模式，確認觀念能不能遷移。</p>
+
+        <div class="drill-intro-stats">
+          <div>
+            <strong id="introStampCount">0</strong>
+            <span>題已完成硃批</span>
+          </div>
+          <div>
+            <strong id="introDrillCount">0</strong>
+            <span>題類題等著你</span>
+          </div>
+        </div>
+
+        <ul class="drill-intro-rules">
+          <li>類題會一題一題出現，文本或圖表直接放在題幹上方。</li>
+          <li>作答後立刻看解析，答錯也會告訴你錯在哪裡。</li>
+          <li>真的卡住可以按「跳過這題」，最後戰報會如實記錄。</li>
+        </ul>
+
+        <button type="button" class="start-deck-btn" onclick="App.beginDrillMode()">
+          <span>開始類題 ➔</span>
+          <span>📝</span>
+        </button>
+        <button type="button" class="btn-chip" onclick="App.backToReview()">先回看詳解</button>
+      </div>
+    </section>
+
+    <!-- 畫面三：類題模式（全部詳解看完後才進入） -->
+    <section id="viewDrills" class="view-card">
+      <div class="drill-mode-card">
+        <div class="investigate-header">
+          <div class="case-badge-group">
+            <span class="case-badge">類題模式</span>
+            <span class="category-badge" id="modeDrillConcept">字形辨析</span>
+          </div>
+          <div class="progress-status" id="modeDrillProgress">進度：1 / 1</div>
+        </div>
+
+        <p class="drill-mode-note">所有詳解都看完了，現在換你動手。每一題都要作答，答完立刻看解析。</p>
+
+        <div class="drill-card">
+          <div class="drill-head">
+            <span class="drill-badge" id="modeDrillBadge">類題</span>
+            <span class="drill-source" id="modeDrillSource">自編類題</span>
+          </div>
+          <div class="drill-source-box" id="modeDrillSourceBox" style="display:none;"></div>
+          <div class="drill-stem" id="modeDrillStem"></div>
+          <div class="drill-options" id="modeDrillOptions"></div>
+          <div class="drill-feedback" id="modeDrillFeedback"></div>
+        </div>
+
+        <div class="drill-mode-nav">
+          <button type="button" class="btn-nav" id="modeDrillPrev" onclick="App.prevDrill()">上一題</button>
+          <button type="button" class="btn-chip" onclick="App.skipDrill()">跳過這題</button>
+          <button type="button" class="btn-nav" id="modeDrillNext" onclick="App.nextDrill()">下一題 ➔</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 畫面四：平反結算戰報 -->
+    <section id="viewReport" class="view-card">
+      <div class="report-card">
+        <div class="report-seal-top">
+          <span class="big-seal">神探結案證書</span>
+        </div>
+        <h2 class="report-title">會考國文模擬考・錯題平反戰報</h2>
+        <p class="report-subtitle" id="reportStudentMeta">考生：王小明（座號 05） ｜ 完成訂正：2026-11-05</p>
+
+        <div class="summary-stats">
+          <div class="stat-box">
+            <div class="stat-num" id="statCompletedCount">0</div>
+            <div class="stat-label">今日平反錯題數</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="statBustedGhosts">0</div>
+            <div class="stat-label">已解析錯項數</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" style="color:var(--seal-green);">100%</div>
+            <div class="stat-label">實體題本硃批率</div>
+          </div>
+        </div>
+
+        <p class="report-drill-summary" id="reportDrillSummary"></p>
+
+        <div class="report-records" id="reportRecordsList"></div>
+
+        <div class="practice-entry">
+          <div class="practice-entry-text">
+            <strong>類題自由練</strong>
+            <span>自己的錯題做完後，可以再挑其他能力點的類題。</span>
+          </div>
+          <button type="button" class="btn-chip" style="padding:12px 20px;" onclick="App.openPractice()">選擇其他類題</button>
+        </div>
+
+        <div class="report-actions">
+          <button type="button" class="btn-action-primary" onclick="App.copyReportText()">
+            <span>📋 複製完整戰報文字（可貼回 Classroom 或作業）</span>
+          </button>
+          <button type="button" class="btn-chip" style="padding:12px 20px;" onclick="App.restart()">
+            <span>🔄 開啟新案卷</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 畫面五：類題自由練 -->
+    <section id="viewPractice" class="view-card">
+      <div class="practice-page">
+        <div class="practice-page-head">
+          <div>
+            <h2 class="practice-page-title">類題自由練</h2>
+            <p class="practice-page-sub">挑一個能力點，或直接隨機抽一題。做完自己的錯題後，再多練幾題。</p>
+          </div>
+          <button type="button" class="btn-chip" onclick="App.showView('viewReport')">← 回戰報</button>
+        </div>
+
+        <div id="practiceListView">
+          <div class="practice-toolbar">
+            <select id="practiceConcept" onchange="App.renderPracticeList()">
+              <option value="">全部能力點</option>
+            </select>
+            <button type="button" class="btn-chip" onclick="App.randomPractice()">🎲 隨機一題</button>
+          </div>
+          <div class="practice-grid" id="practiceGrid"></div>
+        </div>
+
+        <div id="practiceDrillView" style="display:none;">
+          <button type="button" class="practice-back" onclick="App.showPracticeList()">← 返回類題列表</button>
+          <div class="drill-card">
+            <div class="drill-head">
+              <span class="drill-badge" id="practiceConceptBadge">類題</span>
+              <span class="drill-source" id="practiceSource"></span>
+            </div>
+            <div class="drill-source-box" id="practiceSourceBox" style="display:none;"></div>
+            <div class="drill-stem" id="practiceStem"></div>
+            <div class="drill-options" id="practiceOptions"></div>
+            <div class="drill-feedback" id="practiceFeedback"></div>
+          </div>
+          <div class="practice-actions">
+            <button type="button" class="btn-chip" onclick="App.randomPractice()">再練一題</button>
+            <button type="button" class="btn-chip" onclick="App.showPracticeList()">回列表</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 快速跳題完整題號表 -->
+  <div class="jump-overlay" id="jumpOverlay" onclick="App.closeJump(event)">
+    <div class="jump-panel" onclick="event.stopPropagation()">
+      <div class="jump-head">
+        <span>快速跳題</span>
+        <button type="button" class="jump-close" onclick="App.closeJump()">✕</button>
+      </div>
+      <div class="jump-grid" id="jumpGrid"></div>
+      <div class="jump-legend">
+        <span><i class="jdot current"></i>目前</span>
+        <span><i class="jdot done"></i>已蓋章</span>
+        <span><i class="jdot todo"></i>未完成</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 高畫質燈箱 Modal -->
+  <div class="image-modal-overlay" id="imageModal" onclick="App.closeZoom(event)">
+    <div class="modal-content-wrapper" onclick="event.stopPropagation()">
+      <button type="button" class="modal-close-btn" onclick="App.closeZoom()">✕</button>
+      <img id="modalImg" src="" alt="高畫質放大檢視">
+    </div>
+  </div>
+
+  <!-- 類題自由練已改為獨立頁面，不再使用小視窗 -->
+
+  <!-- 浮動訊息 Toast -->
+  <div class="toast-box" id="toastBox">提示訊息</div>
+
+  <!-- 關鍵詞浮動說明 -->
+  <div class="kw-pop" id="kwPop" role="dialog" aria-hidden="true">
+    <button type="button" class="kw-pop-close" onclick="App.hideKwPop()" aria-label="關閉說明">✕</button>
+    <div class="kw-pop-head">
+      <span class="kw-pop-word" id="kwPopWord"></span>
+      <span class="kw-pop-fn" id="kwPopFn"></span>
+    </div>
+    <div class="kw-pop-body" id="kwPopBody"></div>
+    <div class="kw-pop-copy" id="kwPopCopy"></div>
+    <div class="kw-pop-extra" id="kwPopExtra"></div>
+    <div class="kw-pop-tip">點空白處或按 Esc 可關閉</div>
+  </div>
+
+  <!-- 語譯與關鍵詞資料庫（獨立維護，換考卷只要換這支） -->
+  <script src="assets/data-translation.js"></script>
+  <!-- 題幹文字版資料庫 -->
+  <script src="assets/data-text.js"></script>
+  <!-- 類題資料庫 -->
+  <script src="assets/data-drill.js"></script>
+
+  <script>
+    // 注入完整題庫資料庫
+    const EXAM_DB = [{"id": 1, "category": "詞語文意", "official_ans": "C", "stem_img": "assets/images/q1_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "店長要求店員盤點商品時反覆確認數量，以確保所有差池", "B": "校長在臺上向全校師生報告合唱團獲得特優，加冕其表現", "C": "受試者由系統隨機安排，無人可事先得知參加測驗的人選", "D": "推出新穎包裝本來是為了提高銷售量，不料卻使買氣增加"}, "correct_desc": "(C) 受試者由系統隨機安排，無人可事先得知參加測驗的人選。文意通暢無誤。", "ghosts": [{"opt": "A", "text": "店長要求店員盤點商品時反覆確認數量，以確保所有差池", "trap_word": "確保", "explain": "「差池」是差錯失誤，怎能「確保」？自相矛盾！", "correction": "應改為「避免有所差池」", "tokens": [{"text": "店長要求", "isTrap": false}, {"text": "店員盤點", "isTrap": false}, {"text": "商品時反", "isTrap": false}, {"text": "覆確認數", "isTrap": false}, {"text": "量，", "isTrap": false}, {"text": "以", "isTrap": false}, {"text": "確保", "isTrap": true}, {"text": "所有差池", "isTrap": false}]}, {"opt": "B", "text": "校長在臺上向全校師生報告合唱團獲得特優，加冕其表現", "trap_word": "加冕", "explain": "「加冕」指把王冠戴在頭上，為稱帝即位之用，用在學生身上大錯特錯！", "correction": "應改為「嘉勉」", "tokens": [{"text": "校長在臺", "isTrap": false}, {"text": "上向全校", "isTrap": false}, {"text": "師生報告", "isTrap": false}, {"text": "合唱團獲", "isTrap": false}, {"text": "得特優，", "isTrap": false}, {"text": "加冕", "isTrap": true}, {"text": "其表現", "isTrap": false}]}, {"opt": "D", "text": "推出新穎包裝本來是為了提高銷售量，不料卻使買氣增加", "trap_word": "不料", "explain": "提高銷量與買氣增加是同一方向的好事，毫無轉折！", "correction": "刪除轉折詞，不宜用「不料、卻」", "tokens": [{"text": "推出新穎", "isTrap": false}, {"text": "包裝本來", "isTrap": false}, {"text": "是為了提", "isTrap": false}, {"text": "高銷售量", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "不料", "isTrap": true}, {"text": "卻使買氣", "isTrap": false}, {"text": "增加", "isTrap": false}]}], "notebook_task": {"instruction": "請在紙本第 1 題 (A) 圈出「確保」，(B) 圈出「加冕」，並在題旁用紅筆寫下：", "gold_note": "確保改避免；加冕改嘉勉", "verify_key": "避免"}}, {"id": 2, "category": "書法書體", "official_ans": "D", "stem_img": "assets/images/q2_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "【時清】字體行雲流水、筆畫相連之行書風格", "B": "【時清】線條圓轉勻稱、字形修長之小篆風格", "C": "【時清】筆畫平直、方正嚴謹之楷書風格", "D": "【時清】字形寬扁、橫筆具蠶頭燕尾波勢之隸書風格"}, "correct_desc": "(D) 隸書：字形寬扁、蠶頭燕尾，為漢代官方代表字體。", "ghosts": [{"opt": "A", "text": "招牌(A)：字形相連流動，筆意灑脫奔放", "trap_word": "行書", "explain": "這是「行書」，非漢代主要書體，無橫筆波勢寬扁之特徵！", "correction": "此為行書，賈老闆要的是隸書", "tokens": [{"text": "招牌(A)：字形相", "isTrap": false}, {"text": "連流動，筆意灑脫奔放", "isTrap": true}]}, {"opt": "B", "text": "招牌(B)：線條粗細均勻，字形修長圓轉", "trap_word": "篆書", "explain": "這是「小篆」，由秦代李斯規範，字形長圓，非漢代波勢寬扁之書體！", "correction": "此為篆書，秦代主要文字", "tokens": [{"text": "招牌(B)：線條粗", "isTrap": false}, {"text": "細均勻，字形修長圓轉", "isTrap": true}]}, {"opt": "C", "text": "招牌(C)：字體方正嚴謹，橫平豎直無波勢", "trap_word": "楷書", "explain": "這是「楷書」，通行於魏晉隋唐，非漢代主要書體！", "correction": "此為楷書，魏晉以後盛行", "tokens": [{"text": "招牌(C)：字體方正", "isTrap": false}, {"text": "嚴謹，橫平豎直無波勢", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 2 題題幹圈出「漢代」與「寬扁波勢」，並用紅筆寫下：", "gold_note": "漢代主要書體＝隸書（蠶頭燕尾）", "verify_key": "隸書"}}, {"id": 3, "category": "文意推論", "official_ans": "D", "stem_img": "assets/images/q3_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "改良茶樹品種以適應現代氣候", "B": "透過定時灌溉提高茶葉的產量", "C": "藉由研究計畫提高茶樹耐旱性", "D": "結合科學化的管理來栽培茶樹"}, "correct_desc": "(D) 結合科學化的管理來栽培茶樹。段落重心在茶改場將蒸散量轉化為精準灌溉指標。", "ghosts": [{"opt": "A", "text": "改良茶樹品種以適應現代氣候", "trap_word": "改良品種", "explain": "文中全篇未提及基因培育或品種改良，純屬無中生有！", "correction": "文中未提及改良茶樹品種", "tokens": [{"text": "改良茶樹品種", "isTrap": false}, {"text": "以適應現代氣候", "isTrap": true}]}, {"opt": "B", "text": "透過定時灌溉提高茶葉的產量", "trap_word": "定時灌溉", "explain": "茶改場強調的是「精準監測、適時補水」，而非死板「定時」！", "correction": "非定時，是依數據精準補水", "tokens": [{"text": "透過", "isTrap": false}, {"text": "定時灌溉", "isTrap": true}, {"text": "提高茶葉", "isTrap": false}, {"text": "的產量", "isTrap": false}]}, {"opt": "C", "text": "藉由研究計畫提高茶樹耐旱性", "trap_word": "提高耐旱性", "explain": "茶樹耐旱性原本就具備，研究計畫是為農民提供灌溉時機，非改變耐旱度！", "correction": "研究是提供補水指標，非改變耐旱性", "tokens": [{"text": "藉由研究計畫", "isTrap": false}, {"text": "提高茶樹耐旱性", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 3 題文章中圈出「量化灌溉指標」與「排汗量」，並於題旁寫下：", "gold_note": "數據監測＋精準補水＝科學化管理", "verify_key": "科學"}}, {"id": 4, "category": "雙文比對", "official_ans": "A", "stem_img": "assets/images/q4_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "兩文皆指出，三葉蟲堅硬的外殼較有機會形成化石", "B": "綜合兩文可知，不同種類三葉蟲形成化石的部位不同", "C": "關於三葉蟲的腹側是否能形成化石，兩文提出相反的觀點", "D": "兩文皆從挖掘化石、形成化石的角度解釋三葉蟲化石為何較多"}, "correct_desc": "(A) 兩文皆指出堅硬外殼較有機會形成化石。甲提「硬外骨骼」、乙提「碳酸鈣背甲易保存」。", "ghosts": [{"opt": "B", "text": "綜合兩文可知，不同種類三葉蟲形成化石的部位不同", "trap_word": "不同種類", "explain": "兩文皆是在談「三葉蟲的外殼與背甲」，完全未分類比較不同種類！", "correction": "文中未探討不同種類之部位差異", "tokens": [{"text": "綜合兩文", "isTrap": false}, {"text": "可知，", "isTrap": false}, {"text": "不同種類", "isTrap": true}, {"text": "三葉蟲形", "isTrap": false}, {"text": "成化石的", "isTrap": false}, {"text": "部位不同", "isTrap": false}]}, {"opt": "C", "text": "關於三葉蟲的腹側是否能形成化石，兩文提出相反的觀點", "trap_word": "相反的觀點", "explain": "甲文根本沒談腹側，何來相反觀點？乙文亦說極少數特殊狀況可留存。", "correction": "甲文未提腹側，無相反觀點", "tokens": [{"text": "關於三葉", "isTrap": false}, {"text": "蟲的腹側", "isTrap": false}, {"text": "是否能形", "isTrap": false}, {"text": "成化石，", "isTrap": false}, {"text": "兩文提出", "isTrap": false}, {"text": "相反的觀點", "isTrap": true}]}, {"opt": "D", "text": "兩文皆從挖掘化石、形成化石的角度解釋三葉蟲化石為何較多", "trap_word": "挖掘化石", "explain": "兩文通篇只談化石「自然保存與形成」，完全未提考古學家如何「挖掘」！", "correction": "兩文皆未提及挖掘化石", "tokens": [{"text": "兩文皆從", "isTrap": false}, {"text": "挖掘化石", "isTrap": true}, {"text": "、", "isTrap": false}, {"text": "形成化石", "isTrap": false}, {"text": "的角度解", "isTrap": false}, {"text": "釋三葉蟲", "isTrap": false}, {"text": "化石為何", "isTrap": false}, {"text": "較多", "isTrap": false}]}], "notebook_task": {"instruction": "請在第 4 題甲乙兩文分別圈出「堅硬外骨骼」與「碳酸鈣背甲」，寫下：", "gold_note": "甲硬骨骼＋乙硬背甲＝堅硬構造易成化石", "verify_key": "堅硬"}}, {"id": 5, "category": "字形辨正", "official_ans": "C", "stem_img": "assets/images/q5_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "原始叢林危機四伏，伸入其中的探險隊員必須隨時保持警覺", "B": "為了保護人質安全，警方暫且配合歹徒要求，不敢輕舉忘動", "C": "業者草率處理顧客投訴，如此敷衍了事的態度令消費者不滿", "D": "面對同事的懇求，他礙於人情壓力，只能免為其難答應幫忙"}, "correct_desc": "(C) 業者草率處理顧客投訴，如此敷衍了事的態度令消費者不滿。（敷衍了事用字正確）", "ghosts": [{"opt": "A", "text": "原始叢林危機四伏，伸入其中的探險隊員必須隨時保持警覺", "trap_word": "伸入", "explain": "進到險境或深處應用「深入」，伸出手的伸是錯別字！", "correction": "伸入 應改為 深入", "tokens": [{"text": "原始叢林", "isTrap": false}, {"text": "危機四伏", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "伸入", "isTrap": true}, {"text": "其中的探", "isTrap": false}, {"text": "險隊員必", "isTrap": false}, {"text": "須隨時保", "isTrap": false}, {"text": "持警覺", "isTrap": false}]}, {"opt": "B", "text": "為了保護人質安全，警方暫且配合歹徒要求，不敢輕舉忘動", "trap_word": "忘動", "explain": "指未經思慮隨意行動，應用狂妄妄為的「妄」，非忘記之忘！", "correction": "忘動 應改為 妄動", "tokens": [{"text": "為了保護", "isTrap": false}, {"text": "人質安全", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "警方暫且", "isTrap": false}, {"text": "配合歹徒", "isTrap": false}, {"text": "要求，", "isTrap": false}, {"text": "不敢輕舉", "isTrap": false}, {"text": "忘動", "isTrap": true}]}, {"opt": "D", "text": "面對同事的懇求，他礙於人情壓力，只能免為其難答應幫忙", "trap_word": "免為其難", "explain": "勉強去做能力不足之事應用勉勵勉強的「勉」，非免除之免！", "correction": "免為其難 應改為 勉為其難", "tokens": [{"text": "面對同事", "isTrap": false}, {"text": "的懇求，", "isTrap": false}, {"text": "他礙於人", "isTrap": false}, {"text": "情壓力，", "isTrap": false}, {"text": "只能", "isTrap": false}, {"text": "免為其難", "isTrap": true}, {"text": "答應幫忙", "isTrap": false}]}], "notebook_task": {"instruction": "請在紙本第 5 題 (A)(B)(D) 圈出錯字，並於選項旁訂正寫下：", "gold_note": "深入、輕舉妄動、勉為其難", "verify_key": "妄動"}}, {"id": 6, "category": "文意推論", "official_ans": "B", "stem_img": "assets/images/q6_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "是大眾對孤獨處境的錯誤解讀", "B": "為了達成長遠目標而自我管理", "C": "能夠淡然看待貧困帶來的不便", "D": "放棄一切享樂並回歸樸實生活"}, "correct_desc": "(B) 為了達成長遠目標而自我管理。作者強調聚精會神、克制娛樂與消費以達標。", "ghosts": [{"opt": "A", "text": "是大眾對孤獨處境的錯誤解讀", "trap_word": "錯誤解讀", "explain": "作者指出大眾對「吃苦」理解膚淺，並非專指對孤獨處境解讀錯誤！", "correction": "作者是談吃苦本質，非指孤獨被解讀錯誤", "tokens": [{"text": "是大眾對", "isTrap": false}, {"text": "孤獨處境", "isTrap": false}, {"text": "的", "isTrap": false}, {"text": "錯誤解讀", "isTrap": true}]}, {"opt": "C", "text": "能夠淡然看待貧困帶來的不便", "trap_word": "淡然看待貧困", "explain": "作者開門見山說「貧窮就是貧窮，吃苦並非忍受貧窮」，此選項恰恰犯了作者反對的謬誤！", "correction": "作者強調吃苦絕非忍受貧窮", "tokens": [{"text": "能夠", "isTrap": false}, {"text": "淡然看待貧困", "isTrap": true}, {"text": "帶來的不", "isTrap": false}, {"text": "便", "isTrap": false}]}, {"opt": "D", "text": "放棄一切享樂並回歸樸實生活", "trap_word": "回歸樸實", "explain": "作者放棄享樂是為了「專注目標」，並非提倡清心寡欲的樸實生活！", "correction": "克制享樂是為聚焦目標，非提倡樸素", "tokens": [{"text": "放棄一切", "isTrap": false}, {"text": "享樂並", "isTrap": false}, {"text": "回歸樸實", "isTrap": true}, {"text": "生活", "isTrap": false}]}], "notebook_task": {"instruction": "請在紙本第 6 題圈出「為目標聚精會神」與「放棄無效社交」，寫下：", "gold_note": "吃苦非忍受貧窮，而是為目標自律管理", "verify_key": "自律"}}, {"id": 7, "category": "字音辨正", "official_ans": "A", "stem_img": "assets/images/q7_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "這塊土地的面積「畸」零狹小，並不適合建築房舍：ㄐㄧ", "B": "無論媒體如何提問，演員始終對緋聞「緘」默不談：ㄓㄣ", "C": "他是職場中的「佼」佼者，總是不遺餘力完成工作：ㄐㄧㄠ", "D": "從前家長為孩子取名時，大多會避開長輩名「諱」：ㄨㄟˇ"}, "correct_desc": "(A) 畸零狹小：「畸」音 ㄐㄧ，完全正確。", "ghosts": [{"opt": "B", "text": "緘默不談：ㄓㄣ", "trap_word": "ㄓㄣ", "explain": "緘是閉口、封口之意，音 ㄐㄧㄢ，非針砭之ㄓㄣ！", "correction": "緘 音 ㄐㄧㄢ", "tokens": [{"text": "緘默不談", "isTrap": false}, {"text": "：", "isTrap": false}, {"text": "ㄓㄣ", "isTrap": true}]}, {"opt": "C", "text": "佼佼者：ㄐㄧㄠ", "trap_word": "ㄐㄧㄠ", "explain": "佼指美好、出眾，音 ㄐㄧㄠˇ（三聲），不可讀一聲！", "correction": "佼 音 ㄐㄧㄠˇ", "tokens": [{"text": "佼佼者：", "isTrap": false}, {"text": "ㄐㄧㄠ", "isTrap": true}]}, {"opt": "D", "text": "長輩名諱：ㄨㄟˇ", "trap_word": "ㄨㄟˇ", "explain": "諱是避開忌諱之意，音 ㄏㄨㄟˋ（四聲），非ㄨㄟˇ！", "correction": "諱 音 ㄏㄨㄟˋ", "tokens": [{"text": "長輩名諱", "isTrap": false}, {"text": "：", "isTrap": false}, {"text": "ㄨㄟˇ", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 7 題 (B)(C)(D) 選項注音旁，用紅筆更正寫下：", "gold_note": "緘ㄐㄧㄢ、佼ㄐㄧㄠˇ、諱ㄏㄨㄟˋ", "verify_key": "ㄐㄧㄢ"}}, {"id": 8, "category": "文言代詞", "official_ans": "D", "stem_img": "assets/images/q8_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "伺之久", "B": "設網捕而獲之", "C": "得一紫石", "D": "因擊碎之"}, "correct_desc": "(D)「因擊碎之」的主語是「孫子」；其餘選項主語皆為「陳某」。", "ghosts": [{"opt": "A", "text": "伺之久", "trap_word": "陳某", "explain": "守候觀察很久的人是樵夫「陳某」，主語相同。", "correction": "（陳某）伺之久", "tokens": [{"text": "伺", "isTrap": false}, {"text": "之久", "isTrap": true}]}, {"opt": "B", "text": "設網捕而獲之", "trap_word": "陳某", "explain": "設網捕獲大鹿的人也是「陳某」，主語相同。", "correction": "（陳某）設網捕鹿", "tokens": [{"text": "設網捕", "isTrap": false}, {"text": "而獲之", "isTrap": true}]}, {"opt": "C", "text": "得一紫石", "trap_word": "陳某", "explain": "剖開鹿腹得到紫石的人依然是「陳某」，主語相同。", "correction": "（陳某）得紫石", "tokens": [{"text": "得一", "isTrap": false}, {"text": "紫石", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 8 題各選項前用括號補齊主語，並寫下：", "gold_note": "(A)(B)(C)主語皆陳某，(D)主語為其孫", "verify_key": "其孫"}}, {"id": 9, "category": "文意觀點", "official_ans": "C", "stem_img": "assets/images/q9_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "有河流蜿蜒而過的城市方得以永續發展", "B": "人們馴化河流的成效會隨時間變得顯著", "C": "人類自認能夠透過工程控制河水的流向", "D": "興建土堤的鉅額花費反使城市入不敷出"}, "correct_desc": "(C) 人類自認能夠透過工程控制河水的流向。文中「築堤避免拐彎」、「人工掌控馴化」呼應此意。", "ghosts": [{"opt": "A", "text": "有河流蜿蜒而過的城市方得以永續發展", "trap_word": "永續發展", "explain": "文中開頭便說曲折河流對城市是威脅，並非蜿蜒才得以永續！", "correction": "文中說蜿蜒對沿岸不利，無永續發展", "tokens": [{"text": "有河流蜿", "isTrap": false}, {"text": "蜒而過的", "isTrap": false}, {"text": "城市方得", "isTrap": false}, {"text": "以", "isTrap": false}, {"text": "永續發展", "isTrap": true}]}, {"opt": "B", "text": "人們馴化河流的成效會隨時間變得顯著", "trap_word": "成效隨時間顯著", "explain": "作者是在諷刺「自以為馴化」的傲慢，並非肯定成效日益顯著！", "correction": "成效並未顯著，作者反諷人類傲慢", "tokens": [{"text": "人們馴化河流的成", "isTrap": false}, {"text": "效會隨時間變得顯著", "isTrap": true}]}, {"opt": "D", "text": "興建土堤的鉅額花費反使城市入不敷出", "trap_word": "入不敷出", "explain": "文中提及砸鉅額建堤，但接續說因此能累積財富，未曾提及入不敷出！", "correction": "文中未提及入不敷出", "tokens": [{"text": "興建土堤", "isTrap": false}, {"text": "的鉅額花", "isTrap": false}, {"text": "費反使城", "isTrap": false}, {"text": "市", "isTrap": false}, {"text": "入不敷出", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 9 題圈出「傲慢與人定勝天」，並在題旁寫下：", "gold_note": "自認工程可控制河流＝人定勝天的傲慢", "verify_key": "傲慢"}}, {"id": 10, "category": "文意脈絡", "official_ans": "D", "stem_img": "assets/images/q10_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "為何〈夜讀圖〉中的「瞌睡」經常被解讀成一般入睡", "B": "為什麼畫中總要用孩子作為營造「瞌睡」意境的主角", "C": "如何利用「瞌睡」來凸顯孩子是在夜間讀書而非白天", "D": "怎樣才能把抽象的「瞌睡」二字變為可視的繪畫形象"}, "correct_desc": "(D) 怎樣才能把抽象的「瞌睡」二字變為可視的繪畫形象。全文緊扣「不由自主的瞌睡如何化為視覺物件」。", "ghosts": [{"opt": "A", "text": "為何〈夜讀圖〉中的「瞌睡」經常被解讀成一般入睡", "trap_word": "經常被解讀", "explain": "文中並未探討外界讀者是否誤讀，而是討論畫家自己創作時的構思招數！", "correction": "重心在畫家如何創作，非大眾解讀", "tokens": [{"text": "為何〈夜", "isTrap": false}, {"text": "讀圖〉中", "isTrap": false}, {"text": "的「瞌睡", "isTrap": false}, {"text": "」", "isTrap": false}, {"text": "經常被解讀", "isTrap": true}, {"text": "成一般入", "isTrap": false}, {"text": "睡", "isTrap": false}]}, {"opt": "B", "text": "為什麼畫中總要用孩子作為營造「瞌睡」意境的主角", "trap_word": "總要用孩子", "explain": "孩子只是齊白石這幅畫的題材，並非探討所有畫作「總要用孩子」！", "correction": "並非探討為何總以孩子為主角", "tokens": [{"text": "為什麼畫", "isTrap": false}, {"text": "中", "isTrap": false}, {"text": "總要用孩子", "isTrap": true}, {"text": "作為營造", "isTrap": false}, {"text": "「瞌睡」", "isTrap": false}, {"text": "意境的主", "isTrap": false}, {"text": "角", "isTrap": false}]}, {"opt": "C", "text": "如何利用「瞌睡」來凸顯孩子是在夜間讀書而非白天", "trap_word": "凸顯夜間而非白天", "explain": "因果倒置！是利用亮燈與書本來呈現「瞌睡」，不是用瞌睡凸顯夜晚！", "correction": "是用環境物件畫出瞌睡，非用瞌睡凸顯夜晚", "tokens": [{"text": "如何利用「瞌睡」來凸顯", "isTrap": false}, {"text": "孩子是在夜間讀書而非白天", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 10 題圈出「不由自主怎麼畫」與「亮著的燈」，寫下：", "gold_note": "借書本亮燈環境物件，將抽象瞌睡具象化", "verify_key": "具象"}}, {"id": 11, "category": "成語運用", "official_ans": "C", "stem_img": "assets/images/q11_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "莫德里奇不愧為「後生可畏」的足壇前輩，年屆四十依舊能夠擔任球隊主力", "B": "比利時國家隊的客場球衣結合超現實主義藝術，真可謂「撥雲見日」的設計", "C": "義大利隊在世界盃的表現自奪冠後「江河日下」，近三屆皆未取得參賽資格", "D": "梅西盼望與團隊一起舉起冠軍獎盃，個人獎項對他而言不過是「節外生枝」"}, "correct_desc": "(C) 表現「江河日下」：比喻情況日漸衰微，近三屆皆未晉級，使用恰當。", "ghosts": [{"opt": "A", "text": "莫德里奇不愧為「後生可畏」的足壇前輩，年屆四十依舊擔任主力", "trap_word": "後生可畏", "explain": "「後生」指年輕晚輩，怎能用在年屆四十的前輩身上？", "correction": "年長前輩表現出色宜用「寶刀未老」", "tokens": [{"text": "莫德里奇", "isTrap": false}, {"text": "不愧為「", "isTrap": false}, {"text": "後生可畏", "isTrap": true}, {"text": "」的足壇", "isTrap": false}, {"text": "前輩，", "isTrap": false}, {"text": "年屆四十", "isTrap": false}, {"text": "依舊擔任", "isTrap": false}, {"text": "主力", "isTrap": false}]}, {"opt": "B", "text": "球衣結合超現實主義藝術，真可謂「撥雲見日」的設計", "trap_word": "撥雲見日", "explain": "「撥雲見日」比喻除去障礙重見光明，不能用來形容新創設計！", "correction": "創新的新穎設計宜用「別開生面」", "tokens": [{"text": "球衣結合", "isTrap": false}, {"text": "超現實主", "isTrap": false}, {"text": "義藝術，", "isTrap": false}, {"text": "真可謂「", "isTrap": false}, {"text": "撥雲見日", "isTrap": true}, {"text": "」的設計", "isTrap": false}]}, {"opt": "D", "text": "梅西盼望與團隊舉起獎盃，個人獎項對他不過是「節外生枝」", "trap_word": "節外生枝", "explain": "「節外生枝」指橫生事端或惹麻煩，額外獲獎是好事，怎是惹禍？", "correction": "團隊奪冠再得個人獎宜作「錦上添花」", "tokens": [{"text": "梅西盼望", "isTrap": false}, {"text": "與團隊舉", "isTrap": false}, {"text": "起獎盃，", "isTrap": false}, {"text": "個人獎項", "isTrap": false}, {"text": "對他不過", "isTrap": false}, {"text": "是「", "isTrap": false}, {"text": "節外生枝", "isTrap": true}, {"text": "」", "isTrap": false}]}], "notebook_task": {"instruction": "請在紙本第 11 題圈出 (A)後生可畏、(B)撥雲見日、(D)節外生枝，寫下：", "gold_note": "(A)改寶刀未老、(B)改別開生面、(D)改錦上添花", "verify_key": "寶刀未老"}}, {"id": 12, "category": "標點與語氣", "official_ans": "B", "stem_img": "assets/images/q12_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "安安？這麼年輕可以打丙組。", "B": "安安這麼年輕，可以打丙組？", "C": "安安？這麼年輕？可以打丙組？", "D": "安安—這麼年輕—可以打丙組！"}, "correct_desc": "(B) 安安這麼年輕，可以打丙組？（阿明認為安安貌美年輕應打丁組，驚訝質疑為何打年長的丙組）。", "ghosts": [{"opt": "A", "text": "安安？這麼年輕可以打丙組。", "trap_word": "句號肯定", "explain": "句尾用句號代表阿明肯定安安打丙組，與後文「以為你打丁組」矛盾！", "correction": "句號代表肯定，與阿明質疑之意相反", "tokens": [{"text": "安安？這麼年", "isTrap": false}, {"text": "輕可以打丙組。", "isTrap": true}]}, {"opt": "C", "text": "安安？這麼年輕？可以打丙組？", "trap_word": "三個問號", "explain": "三個問號代表阿明懷疑安安不年輕，但阿明是覺得她真的很年輕！", "correction": "「這麼年輕？」代表懷疑不年輕，錯誤", "tokens": [{"text": "安安？這麼年輕", "isTrap": false}, {"text": "？可以打丙組？", "isTrap": true}]}, {"opt": "D", "text": "安安—這麼年輕—可以打丙組！", "trap_word": "驚嘆號認同", "explain": "破折號加驚嘆號代表阿明讚嘆認同安安打丙組，與原文語意相左！", "correction": "驚嘆號代表讚同打丙組，與文意不合", "tokens": [{"text": "安安—這麼年輕", "isTrap": false}, {"text": "—可以打丙組！", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 12 題對話「打丁組啦」旁畫星號，寫下：", "gold_note": "阿明認為應打丁組，故對打丙組抱持「疑惑問號」", "verify_key": "問號"}}, {"id": 13, "category": "文言文文意", "official_ans": "D", "stem_img": "assets/images/q13_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "出言袒護近侍的無禮行為，讓他們免於懲罰", "B": "專心於課堂，卻因近侍的荒唐行徑遭到責備", "C": "驚覺遊獵令人玩物喪志，故與損友斷絕往來", "D": "莊重看待讀書場所，表示學習時不願受干擾"}, "correct_desc": "(D) 莊重看待讀書場所，表示學習時不願受干擾。斥責「讀書之所先生在前安敢褻狎」。", "ghosts": [{"opt": "A", "text": "出言袒護近侍的無禮行為，讓他們免於懲罰", "trap_word": "出言袒護", "explain": "太子正色斥責近侍「急引去毋召責」，是嚴正警告，絕非護短偏袒！", "correction": "是嚴正告誡驅逐，絕非袒護", "tokens": [{"text": "出言袒護", "isTrap": true}, {"text": "近侍的無", "isTrap": false}, {"text": "禮行為，", "isTrap": false}, {"text": "讓他們免", "isTrap": false}, {"text": "於懲罰", "isTrap": false}]}, {"opt": "B", "text": "專心於課堂，卻因近侍的荒唐行徑遭到責備", "trap_word": "遭到責備", "explain": "太子並未被老師責備，受驚退下的是胡鬧的近侍！", "correction": "太子未受責備，驚懼退下的是近侍", "tokens": [{"text": "專心於課", "isTrap": false}, {"text": "堂，", "isTrap": false}, {"text": "卻因近侍", "isTrap": false}, {"text": "的荒唐行", "isTrap": false}, {"text": "徑", "isTrap": false}, {"text": "遭到責備", "isTrap": true}]}, {"opt": "C", "text": "驚覺遊獵令人玩物喪志，故與損友斷絕往來", "trap_word": "斷絕往來", "explain": "近侍是宮中侍從奴僕，並非太子的損友或同儕！", "correction": "近侍為侍從僕役，非平等交遊之損友", "tokens": [{"text": "驚覺遊獵", "isTrap": false}, {"text": "令人玩物", "isTrap": false}, {"text": "喪志，", "isTrap": false}, {"text": "故與損友", "isTrap": false}, {"text": "斷絕往來", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 13 題文章圈出「此讀書之所」與「長者在前」，寫下：", "gold_note": "重視殿堂尊嚴＋尊敬師長＝不願學習受擾", "verify_key": "尊嚴"}}, {"id": 14, "category": "規則與日期換算", "official_ans": "B", "stem_img": "assets/images/q14_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "余莒如果對前2次記點有異議，應該在115/4/8以前提出", "B": "余莒曾經在115/2/2違規記點累計達3點，並被停權14天", "C": "若余莒在115/4/2因酒駕違規，直到116/5/2才會恢復使用權利", "D": "若余莒115/4/1後未再因違規而被記點，直至116/4/1點數才歸零"}, "correct_desc": "(B) 余莒曾經在 115/2/2 違規記點累計達 3 點，並被停權 14 天。（114/5/2~115/2/2 未滿一年累計 3 點）。", "ghosts": [{"opt": "A", "text": "余莒如果對前2次記點有異議，應該在115/4/8以前提出", "trap_word": "115/4/8", "explain": "異議須於記點當日起 7 日內提出，前兩次為 114/5/2，期限是 114/5/9！", "correction": "前2次異議期限為114/5/9以前", "tokens": [{"text": "余莒如果", "isTrap": false}, {"text": "對前2次", "isTrap": false}, {"text": "記點有異", "isTrap": false}, {"text": "議，", "isTrap": false}, {"text": "應該在", "isTrap": false}, {"text": "115/4/8", "isTrap": true}, {"text": "以前提出", "isTrap": false}]}, {"opt": "C", "text": "若余莒在115/4/2因酒駕違規，直到116/5/2才會恢復使用權利", "trap_word": "116/5/2", "explain": "酒駕為直接停權「2年」，115/4/2酒駕須至 117/4/2 才能恢復！", "correction": "酒駕停權2年，應至117/4/2恢復", "tokens": [{"text": "若余莒在", "isTrap": false}, {"text": "115/", "isTrap": false}, {"text": "4/2因", "isTrap": false}, {"text": "酒駕違規", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "直到", "isTrap": false}, {"text": "116/5/2", "isTrap": true}, {"text": "才會恢復", "isTrap": false}, {"text": "使用權利", "isTrap": false}]}, {"opt": "D", "text": "若余莒115/4/1後未再因違規而被記點，直至116/4/1點數才歸零", "trap_word": "116/4/1歸零", "explain": "記點是從「第1點當日（114/5/2）」起算一年，滿一年即115/5/2歸零！", "correction": "起算點為第1點之114/5/2，115/5/2歸零", "tokens": [{"text": "若余莒115/4/1後未再因違規而", "isTrap": false}, {"text": "被記點，直至116/4/1點數才歸零", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 14 題表格旁列出算式，並用紅筆寫下：", "gold_note": "114/5/2記2點＋115/2/2記1點＝滿3點停權14天", "verify_key": "停權"}}, {"id": 15, "category": "文言文文意", "official_ans": "A", "stem_img": "assets/images/q15_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "其韻致難以用言語、畫作來呈現", "B": "形象聖潔因而令人不敢隨意觸碰", "C": "其香氣愈濃厚代表愈加祥瑞之意", "D": "具鮮豔外觀而常為畫家描摹之物"}, "correct_desc": "(A) 其韻致難以用言語、畫作來呈現。「名之不可」＝無法用言語形容；「莫能肖也」＝無法畫得逼真。", "ghosts": [{"opt": "B", "text": "形象聖潔因而令人不敢隨意觸碰", "trap_word": "不敢隨意觸碰", "explain": "文中「非可逼而取也」是指無法刻意湊近去聞香，非指不敢觸碰！", "correction": "非可逼而取是指香氣無法湊近硬聞", "tokens": [{"text": "形象聖潔", "isTrap": false}, {"text": "因而令人", "isTrap": false}, {"text": "不敢隨意觸碰", "isTrap": true}]}, {"opt": "C", "text": "其香氣愈濃厚代表愈加祥瑞之意", "trap_word": "愈濃厚", "explain": "蘭花香氣「若有無近遠續斷」，純以情韻勝，絕非濃郁撲鼻！", "correction": "蘭香若隱若現，並非愈濃愈好", "tokens": [{"text": "其香氣", "isTrap": false}, {"text": "愈濃厚", "isTrap": true}, {"text": "代表愈加", "isTrap": false}, {"text": "祥瑞之意", "isTrap": false}]}, {"opt": "D", "text": "具鮮豔外觀而常為畫家描摹之物", "trap_word": "鮮豔外觀", "explain": "文中明確說「不極於色（不過於濃豔）」、「莫能肖（畫家畫不出其神韻）」！", "correction": "不極於色＝不濃豔；莫能肖＝難以畫出", "tokens": [{"text": "具", "isTrap": false}, {"text": "鮮豔外觀", "isTrap": true}, {"text": "而常為畫", "isTrap": false}, {"text": "家描摹之", "isTrap": false}, {"text": "物", "isTrap": false}]}], "notebook_task": {"instruction": "請在紙本第 15 題圈出「名之不可」與「莫能肖」，寫下：", "gold_note": "名之不可＝難以言喻；莫能肖＝難以描繪", "verify_key": "言喻"}}, {"id": 16, "category": "文言文譬喻", "official_ans": "B", "stem_img": "assets/images/q16_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "權臣當道令人無處施展，不如告老還鄉", "B": "朝堂官員一味攀附權貴，終將禍及自身", "C": "掌權者爭謀私利而無心政務，導致民不聊生", "D": "官場升遷應當重視才學，而非仰賴拉黨結派"}, "correct_desc": "(B) 朝堂官員一味攀附權貴，終將禍及自身。靠權臣火堆取暖，火熄灰冷必遭族滅凍斃。", "ghosts": [{"opt": "A", "text": "權臣當道令人無處施展，不如告老還鄉", "trap_word": "告老還鄉", "explain": "張九齡是預言趨炎附勢者的悲慘下場，全文未提自己想辭官還鄉！", "correction": "文中未提及告老還鄉", "tokens": [{"text": "權臣當道", "isTrap": false}, {"text": "令人無處", "isTrap": false}, {"text": "施展，", "isTrap": false}, {"text": "不如", "isTrap": false}, {"text": "告老還鄉", "isTrap": true}]}, {"opt": "C", "text": "掌權者爭謀私利而無心政務，導致民不聊生", "trap_word": "民不聊生", "explain": "九齡批評的是朝官攀附巴結楊國忠之陋習，未著墨於民間生計之苦！", "correction": "焦點在官員攀附權貴，未提民不聊生", "tokens": [{"text": "掌權者爭", "isTrap": false}, {"text": "謀私利而", "isTrap": false}, {"text": "無心政務", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "導致", "isTrap": false}, {"text": "民不聊生", "isTrap": true}]}, {"opt": "D", "text": "官場升遷應當重視才學，而非仰賴拉黨結派", "trap_word": "重視才學", "explain": "「向火乞兒」重在警告依附權貴將遭禍滅族，非闡述官員選拔體制！", "correction": "著重在趨炎附勢必遭災禍，非論才學", "tokens": [{"text": "官場升遷", "isTrap": false}, {"text": "應當", "isTrap": false}, {"text": "重視才學", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "而非仰賴", "isTrap": false}, {"text": "拉黨結派", "isTrap": false}]}], "notebook_task": {"instruction": "請在第 16 題圈出「向火乞兒」與「火盡灰冷」，寫下：", "gold_note": "向火乞兒比喻趨炎附勢，後台一倒必自取滅亡", "verify_key": "趨炎附勢"}}, {"id": 17, "category": "圖表判讀", "official_ans": "C", "stem_img": "assets/images/q17_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "烏山頭水庫114年的用水中，工業與農業用水比例相當", "B": "114年水庫用水的用途越單一者，114年的進水量也越少", "C": "石門水庫114年進水量較曾文水庫少，但提供的用水較多", "D": "鯉魚潭水庫114年的用水量比德基水庫114年的用水量還高"}, "correct_desc": "(C) 石門水庫進水量較曾文水庫少，但提供的用水較多（石門用水約5.5萬萬公噸，曾文用水約3萬）。", "ghosts": [{"opt": "A", "text": "烏山頭水庫114年的用水中，工業與農業用水比例相當", "trap_word": "比例相當", "explain": "烏山頭農業用水逾4萬，工業用水不足500，相差近百倍，絕非相當！", "correction": "烏山頭農業用水遠大於工業用水", "tokens": [{"text": "烏山頭水", "isTrap": false}, {"text": "庫114", "isTrap": false}, {"text": "年的用水", "isTrap": false}, {"text": "中，", "isTrap": false}, {"text": "工業與農", "isTrap": false}, {"text": "業用水", "isTrap": false}, {"text": "比例相當", "isTrap": true}]}, {"opt": "B", "text": "114年水庫用水的用途越單一者，114年的進水量也越少", "trap_word": "進水量也越少", "explain": "德基與曾文水庫用水用途非常單一（發電），但進水量高居前二名！", "correction": "曾文與德基用途單一，但進水量名列前茅", "tokens": [{"text": "114年", "isTrap": false}, {"text": "水庫用水", "isTrap": false}, {"text": "的用途越", "isTrap": false}, {"text": "單一者，", "isTrap": false}, {"text": "114年", "isTrap": false}, {"text": "的", "isTrap": false}, {"text": "進水量也越少", "isTrap": true}]}, {"opt": "D", "text": "鯉魚潭水庫114年的用水量比德基水庫114年的用水量還高", "trap_word": "比德基還高", "explain": "德基發電用水超過10萬，鯉魚潭生活用水不到3萬，德基遠高於鯉魚潭！", "correction": "德基用水逾10萬，遠高於鯉魚潭", "tokens": [{"text": "鯉魚潭水庫114年的用水量比", "isTrap": false}, {"text": "德基水庫114年的用水量還高", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 17 題石門與曾文兩水庫柱狀圖上標記數字，寫下：", "gold_note": "石門進水少於曾文，但實際民生農業用水多於曾文", "verify_key": "石門"}}, {"id": 18, "category": "文意理解", "official_ans": "D", "stem_img": "assets/images/q18_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "閱讀時投入個人情感反而誤解小說內涵", "B": "想要透過客觀角度評述小說卻無從切入", "C": "每次閱讀時小說人物都會呈現不同樣貌", "D": "不易將生命經驗與小說中的角色相連結"}, "correct_desc": "(D) 不易將生命經驗與小說中的角色相連結。作者明言「沒一人是我、無關個人認同」。", "ghosts": [{"opt": "A", "text": "閱讀時投入個人情感反而誤解小說內涵", "trap_word": "誤解小說內涵", "explain": "作者並非因為投入情感而誤解，而是他根本「不投入個人認同」！", "correction": "作者是理智旁觀，未曾提及誤解內涵", "tokens": [{"text": "閱讀時投", "isTrap": false}, {"text": "入個人情", "isTrap": false}, {"text": "感反而", "isTrap": false}, {"text": "誤解小說內涵", "isTrap": true}]}, {"opt": "B", "text": "想要透過客觀角度評述小說卻無從切入", "trap_word": "無從切入", "explain": "作者「可以暢談人物特點，下筆談文學角度好在哪裡」，切入極為順暢！", "correction": "作者擅長客觀評述，並非無從切入", "tokens": [{"text": "想要透過", "isTrap": false}, {"text": "客觀角度", "isTrap": false}, {"text": "評述小說", "isTrap": false}, {"text": "卻", "isTrap": false}, {"text": "無從切入", "isTrap": true}]}, {"opt": "C", "text": "每次閱讀時小說人物都會呈現不同樣貌", "trap_word": "呈現不同樣貌", "explain": "文中未提及同一人物在不同閱讀時期的形象轉變！", "correction": "文中未提及人物呈現不同樣貌", "tokens": [{"text": "每次閱讀", "isTrap": false}, {"text": "時小說人", "isTrap": false}, {"text": "物都會", "isTrap": false}, {"text": "呈現不同樣貌", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 18 題圈出「沒一人是我」與「隔岸觀火」，寫下：", "gold_note": "旁觀抽離＋用腦不用心＝不將自身經驗投射角色", "verify_key": "旁觀"}}, {"id": 19, "category": "文言文文意", "official_ans": "A", "stem_img": "assets/images/q19_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "作者不理會船身傾斜而繼續寫字", "B": "船身搖晃迫使作者不得不停下筆", "C": "江濤發出的聲響令作者感到不安", "D": "作者藉自身乘船經驗安撫同行者"}, "correct_desc": "(A) 作者不理會船身傾斜而繼續寫字。「吾作字不少衰」、「孰與且作字乎」。", "ghosts": [{"opt": "B", "text": "船身搖晃迫使作者不得不停下筆", "trap_word": "不得不停下筆", "explain": "作者明寫「吾作字不少衰」，堅持不停筆繼續寫，完全與事實相反！", "correction": "作者興致絲毫不減，堅持繼續寫字", "tokens": [{"text": "船身搖晃", "isTrap": false}, {"text": "迫使作者", "isTrap": false}, {"text": "不得不停下筆", "isTrap": true}]}, {"opt": "C", "text": "江濤發出的聲響令作者感到不安", "trap_word": "感到不安", "explain": "嚇得面無人色的是其他人（士無人色），作者泰然處之！", "correction": "他人面無人色，作者泰然自若", "tokens": [{"text": "江濤發出", "isTrap": false}, {"text": "的聲響令", "isTrap": false}, {"text": "作者", "isTrap": false}, {"text": "感到不安", "isTrap": true}]}, {"opt": "D", "text": "作者藉自身乘船經驗安撫同行者", "trap_word": "安撫同行者", "explain": "作者心想自己起身也幫不上忙不如寫字，並無安撫同行的舉動！", "correction": "作者自顧寫字，並未安撫同行者", "tokens": [{"text": "作者藉自", "isTrap": false}, {"text": "身乘船經", "isTrap": false}, {"text": "驗", "isTrap": false}, {"text": "安撫同行者", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 19 題圈出「作字不少衰」與「孰與且作字乎」，寫下：", "gold_note": "臨險灘處變不驚，深知慌亂無益故安然習字", "verify_key": "不驚"}}, {"id": 20, "category": "年齡代稱推算", "official_ans": "B", "stem_img": "assets/images/q20_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "李同軌若能多活三年，便可達耳順之年", "B": "李同軌未達不惑之年，便已任中書侍郎", "C": "李同軌在而立之前，奉皇帝的命令論難", "D": "李同軌兼任通直散騎常侍時，已過知命"}, "correct_desc": "(B) 李同軌未達不惑之年，便已任中書侍郎。天平年間他約35～38歲，未滿40歲（不惑之年）。", "ghosts": [{"opt": "A", "text": "李同軌若能多活三年，便可達耳順之年", "trap_word": "耳順之年", "explain": "李同軌享年47歲，多活三年為50歲，50歲是「知命」，60歲才是「耳順」！", "correction": "47+3=50歲是知命之年，耳順為60歲", "tokens": [{"text": "李同軌若", "isTrap": false}, {"text": "能多活三", "isTrap": false}, {"text": "年，", "isTrap": false}, {"text": "便可達", "isTrap": false}, {"text": "耳順之年", "isTrap": true}]}, {"opt": "C", "text": "李同軌在而立之前，奉皇帝的命令論難", "trap_word": "而立之前", "explain": "奉命論難在永熙二年（533年），李同軌已34歲，已過30歲（而立之年）！", "correction": "533-500+1=34歲，已過而立之年（30歲）", "tokens": [{"text": "李同軌在", "isTrap": false}, {"text": "而立之前", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "奉皇帝的", "isTrap": false}, {"text": "命令論難", "isTrap": false}]}, {"opt": "D", "text": "李同軌兼任通直散騎常侍時，已過知命", "trap_word": "已過知命", "explain": "興和年間李同軌約40～43歲，李同軌終生僅活到47歲，從未達到50歲（知命）！", "correction": "李同軌47歲過世，終生未滿知命（50歲）", "tokens": [{"text": "李同軌兼", "isTrap": false}, {"text": "任通直散", "isTrap": false}, {"text": "騎常侍時", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "已過知命", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 20 題旁邊列出年齡代稱公式，並用紅筆寫下：", "gold_note": "而立30、不惑40、知命50、耳順60；天平年間約35歲未達不惑", "verify_key": "不惑"}}, {"id": 21, "category": "文言策略理解", "official_ans": "A", "stem_img": "assets/images/q21_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "善用策略，降低工程所需運輸成本", "B": "取民家廢棄磚瓦來修建，物盡其用", "C": "就近挖掘汴水沙土，減少材料支出", "D": "嚴格監督，以提升營造作業的效率"}, "correct_desc": "(A) 善用策略，降低工程所需運輸成本。水運建材與就地取土回填，解決運輸龐大開銷。", "ghosts": [{"opt": "B", "text": "取民家廢棄磚瓦來修建，物盡其用", "trap_word": "取民家廢棄", "explain": "文中是將「修建宮室產生的廢瓦礫」回填到溝渠裡，非拿百姓爛磚去蓋皇宮！", "correction": "是將工程廢土填平溝渠，非向民家取廢磚蓋宮殿", "tokens": [{"text": "取民家廢棄", "isTrap": true}, {"text": "磚瓦來修", "isTrap": false}, {"text": "建，", "isTrap": false}, {"text": "物盡其用", "isTrap": false}]}, {"opt": "C", "text": "就近挖掘汴水沙土，減少材料支出", "trap_word": "汴水沙土", "explain": "丁公是直接開挖通衢大道取土，汴水是用來行船運送木材，非取汴水沙！", "correction": "開挖通衢大街取土，汴水用作運河", "tokens": [{"text": "就近挖掘", "isTrap": false}, {"text": "汴水沙土", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "減少材料", "isTrap": false}, {"text": "支出", "isTrap": false}]}, {"opt": "D", "text": "嚴格監督，以提升營造作業的效率", "trap_word": "嚴格監督", "explain": "文中稱讚的是其「巧思調度規劃」，從未提及監工嚴苛之語！", "correction": "成功關鍵在巧妙工序設計，非嚴格監督", "tokens": [{"text": "嚴格監督", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "以提升營", "isTrap": false}, {"text": "造作業的", "isTrap": false}, {"text": "效率", "isTrap": false}]}], "notebook_task": {"instruction": "請在第 21 題圈出「一舉而三役濟」，並在題旁寫下：", "gold_note": "取土＋運料＋填廢土合一，水運大幅降低運輸成本", "verify_key": "運輸"}}, {"id": 22, "category": "詩歌形式與意境", "official_ans": "D", "stem_img": "assets/images/q22_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "兩詩皆押平聲韻，且只有偶數句用韻", "B": "甲詩中呈現夜雨之聲，乙詩中呈現落葉之聲", "C": "兩詩皆於詩末抒發感懷，述說無人相伴的孤獨處境", "D": "甲詩首聯點出僧與客的互動，乙詩首聯點出前去拜訪僧人"}, "correct_desc": "(D) 甲詩首聯點出僧與客的互動（對客說閒緣），乙詩首聯點出前去拜訪僧人（茅屋訪孤僧）。", "ghosts": [{"opt": "A", "text": "兩詩皆押平聲韻，且只有偶數句用韻", "trap_word": "只有偶數句", "explain": "甲詩首句「僧未眠」之「眠」字即已入韻（首句入韻），並非只有偶數句！", "correction": "甲詩第一句眠即入韻，非僅偶數句", "tokens": [{"text": "兩詩皆押", "isTrap": false}, {"text": "平聲韻，", "isTrap": false}, {"text": "且", "isTrap": false}, {"text": "只有偶數句", "isTrap": true}, {"text": "用韻", "isTrap": false}]}, {"opt": "B", "text": "甲詩中呈現夜雨之聲，乙詩中呈現落葉之聲", "trap_word": "呈現夜雨", "explain": "甲詩「滿洞松聲似雨天」是松濤風聲聽起來像雨，並無真下夜雨！", "correction": "松聲似雨是譬喻松濤，並無真下雨", "tokens": [{"text": "甲詩中", "isTrap": false}, {"text": "呈現夜雨", "isTrap": true}, {"text": "之聲，", "isTrap": false}, {"text": "乙詩中呈", "isTrap": false}, {"text": "現落葉之", "isTrap": false}, {"text": "聲", "isTrap": false}]}, {"opt": "C", "text": "兩詩皆於詩末抒發感懷，述說無人相伴的孤獨處境", "trap_word": "無人相伴孤獨", "explain": "甲詩末聯「心繫青雲十五年」是感嘆自己放不下官職功名，非無人相伴！", "correction": "甲詩感嘆心繫仕途，非無人相伴", "tokens": [{"text": "兩詩皆於詩末抒發感懷，", "isTrap": false}, {"text": "述說無人相伴的孤獨處境", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 22 題甲詩「似雨天」旁圈記，並用紅筆寫下：", "gold_note": "似雨非真雨；甲詩首句眠入韻；甲末聯嘆功名仕途", "verify_key": "松濤"}}, {"id": 23, "category": "文言理解與人物", "official_ans": "B", "stem_img": "assets/images/q23_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "陳鎰致力破除鄉野迷信，導正民風", "B": "陳鎰施政有方，深獲當地民眾愛戴", "C": "百姓不忍陳鎰屈就，聚集起來向朝廷陳情", "D": "百姓感念陳鎰的恩德，盡力為其消災解厄"}, "correct_desc": "(B) 陳鎰施政有方，深獲當地民眾愛戴。萬民遮道挽留、爭先抬轎神化，足證民心所向。", "ghosts": [{"opt": "A", "text": "陳鎰致力破除鄉野迷信，導正民風", "trap_word": "破除鄉野迷信", "explain": "百姓抬轎治病是民眾熱愛官員產生的神異傳聞，陳鎰並未以此破除迷信！", "correction": "百姓神化抬轎治病，非陳鎰破除迷信", "tokens": [{"text": "陳鎰致力", "isTrap": false}, {"text": "破除鄉野迷信", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "導正民風", "isTrap": false}]}, {"opt": "C", "text": "百姓不忍陳鎰屈就，聚集起來向朝廷陳情", "trap_word": "向朝廷陳情", "explain": "百姓是聚集在路上攔路挽留陳鎰（遮道挽留），並非去向朝廷上書陳情！", "correction": "百姓是在路上挽留陳鎰，非上奏朝廷", "tokens": [{"text": "百姓不忍", "isTrap": false}, {"text": "陳鎰屈就", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "聚集起來", "isTrap": false}, {"text": "向朝廷陳情", "isTrap": true}]}, {"opt": "D", "text": "百姓感念陳鎰的恩德，盡力為其消災解厄", "trap_word": "為其消災解厄", "explain": "因果倒置！是百姓希望透過替陳鎰抬轎來為「自己父母消災癒疾」！", "correction": "是百姓希望藉此治癒自己疾苦，非替陳公消災", "tokens": [{"text": "百姓感念", "isTrap": false}, {"text": "陳鎰的恩", "isTrap": false}, {"text": "德，", "isTrap": false}, {"text": "盡力", "isTrap": false}, {"text": "為其消災解厄", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 23 題圈出「遮道挽留」與「人爭舁之」，寫下：", "gold_note": "寬平施政得民心，百姓挽留爭抬轎＝深獲民眾愛戴", "verify_key": "愛戴"}}, {"id": 24, "category": "文言論證分析", "official_ans": "C", "stem_img": "assets/images/q24_stem.png", "passage_img": null, "passage_title": null, "options": {"A": "藉仁君與暴君的對比，說明重視百姓的領袖才會有追隨者", "B": "列舉梁武帝之事為正面例證，闡述君王應作為臣民的典範", "C": "先引用古語開頭，再闡述統治者的喜好對人民深具影響力", "D": "善用譬喻手法，說明周、孔之教對推行堯、舜之道的重要"}, "correct_desc": "(C) 先引用古語開頭，再闡述統治者的喜好對人民深具影響力。上行下效之論述。", "ghosts": [{"opt": "A", "text": "藉仁君與暴君的對比，說明重視百姓的領袖才會有追隨者", "trap_word": "才會有追隨者", "explain": "文中明言「桀、紂率天下以暴，而人從之」，暴君一樣有人盲從跟隨！", "correction": "桀紂暴虐百姓亦盲從，非僅仁君有追隨者", "tokens": [{"text": "藉仁君與", "isTrap": false}, {"text": "暴君的對", "isTrap": false}, {"text": "比，", "isTrap": false}, {"text": "說明重視", "isTrap": false}, {"text": "百姓的領", "isTrap": false}, {"text": "袖", "isTrap": false}, {"text": "才會有追隨者", "isTrap": true}]}, {"opt": "B", "text": "列舉梁武帝之事為正面例證，闡述君王應作為臣民的典範", "trap_word": "正面例證", "explain": "太宗直言梁武帝好佛導致百官荒廢政務「此事足為鑑戒」，是反面教材！", "correction": "梁武帝荒廢政務，太宗以此為反面戒鑑", "tokens": [{"text": "列舉梁武", "isTrap": false}, {"text": "帝之事為", "isTrap": false}, {"text": "正面例證", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "闡述君王", "isTrap": false}, {"text": "應作為臣", "isTrap": false}, {"text": "民的典範", "isTrap": false}]}, {"opt": "D", "text": "善用譬喻手法，說明周、孔之教對推行堯、舜之道的重要", "trap_word": "周孔對推行堯舜", "explain": "「如鳥有翼，如魚依水」是形容儒家教化對「人君治國」至關重要，非周孔與堯舜之關係！", "correction": "如鳥有翼是比喻治國離不開仁政教化", "tokens": [{"text": "善用譬喻手法，說明周、孔", "isTrap": false}, {"text": "之教對推行堯、舜之道的重要", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 24 題圈出「君猶器人猶水」與「下之所行皆從上之所好」，寫下：", "gold_note": "古語為引子，論證上行下效（君王喜好主導萬民風氣）", "verify_key": "上行下效"}}, {"id": 25, "category": "現代散文閱讀", "official_ans": "A", "stem_img": "assets/images/q25_stem.png", "passage_img": "assets/images/passage_25_26.png", "passage_title": "題組【25～26 題】選文：廚師的土著化", "options": {"A": "擁有與眾人相似或相同的經歷後，兩人與群體的距離得以拉近", "B": "兩人皆在事件中展現超乎眾人的能力，因而在群體裡站穩腳步", "C": "隨著與眾人相處的時間越久，群體自然而然將兩人視為一分子", "D": "兩人皆在融入群體過程承受巨大壓力，為此不斷設法突破現況"}, "correct_desc": "(A) 擁有與眾人相似或相同的經歷後，兩人與群體的距離得以拉近。（切手刀疤 / 狼狽逃竄）。", "ghosts": [{"opt": "B", "text": "兩人皆在事件中展現超乎眾人的能力，因而在群體裡站穩腳步", "trap_word": "超乎眾人的能力", "explain": "作者差點切掉手指、學者慌張逃跑，都是極其笨拙狼狽之舉，何來超強能力？", "correction": "兩人皆展現狼狽笨拙之舉，非超常能力", "tokens": [{"text": "兩人皆在", "isTrap": false}, {"text": "事件中展", "isTrap": false}, {"text": "現", "isTrap": false}, {"text": "超乎眾人的能力", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "因而在群", "isTrap": false}, {"text": "體裡站穩", "isTrap": false}, {"text": "腳步", "isTrap": false}]}, {"opt": "C", "text": "隨著與眾人相處的時間越久，群體自然而然將兩人視為一分子", "trap_word": "時間越久自然而然", "explain": "作者特別強調原本大家都不理他，是透過突發的「芝麻開門事件」才化解隔閡！", "correction": "是因特殊事件破冰，非時間久自然融入", "tokens": [{"text": "隨著與眾人相處的時間越久，", "isTrap": false}, {"text": "群體自然而然將兩人視為一分子", "isTrap": true}]}, {"opt": "D", "text": "兩人皆在融入群體過程承受巨大壓力，為此不斷設法突破現況", "trap_word": "設法突破現況", "explain": "兩人融入契機皆是「意外事故」，絕非事先預謀或刻意設計的突破策略！", "correction": "融入契機皆為偶發意外，非刻意設法", "tokens": [{"text": "兩人皆在", "isTrap": false}, {"text": "融入群體", "isTrap": false}, {"text": "過程承受", "isTrap": false}, {"text": "巨大壓力", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "為此不斷", "isTrap": false}, {"text": "設法突破現況", "isTrap": true}]}], "notebook_task": {"instruction": "請在題組選文旁圈記「展示刀疤」與「榮譽村民」，寫下：", "gold_note": "共患難或擁有共同痛點經歷，打破隔閡融入群體", "verify_key": "共患難"}}, {"id": 26, "category": "現代散文閱讀", "official_ans": "B", "stem_img": "assets/images/q26_stem.png", "passage_img": "assets/images/passage_25_26.png", "passage_title": "題組【25～26 題】選文：廚師的土著化", "options": {"A": "外來者對於當地文化感到新奇", "B": "外來者的思維變得與當地人相近", "C": "外來者促使當地人的習慣發生變化", "D": "外來者透過肢體語言與當地人交流"}, "correct_desc": "(B) 外來者的思維變得與當地人相近。文中：「可以用當地人的邏輯下判斷」。", "ghosts": [{"opt": "A", "text": "外來者對於當地文化感到新奇", "trap_word": "感到新奇", "explain": "感到新奇只是觀光客心態，土著化是潛移默化到「覺得理所當然」！", "correction": "土著化是視為理所當然，非感到新奇", "tokens": [{"text": "外來者對", "isTrap": false}, {"text": "於當地文", "isTrap": false}, {"text": "化", "isTrap": false}, {"text": "感到新奇", "isTrap": true}]}, {"opt": "C", "text": "外來者促使當地人的習慣發生變化", "trap_word": "促使當地人改變", "explain": "方向顛倒！是外來者被在地人同化，並非外來者去改變當地人習慣！", "correction": "是外來者被同化，非改變當地人", "tokens": [{"text": "外來者促使當地", "isTrap": false}, {"text": "人的習慣發生變化", "isTrap": true}]}, {"opt": "D", "text": "外來者透過肢體語言與當地人交流", "trap_word": "透過肢體交流", "explain": "文中提及肢體語言是「慣習」內化後的自然流露，非指刻意拿來交流！", "correction": "肢體動作是內化習慣之展現，非刻意工具", "tokens": [{"text": "外來者透過肢體", "isTrap": false}, {"text": "語言與當地人交流", "isTrap": true}]}], "notebook_task": {"instruction": "請在選文第一段圈出「可以用當地人的邏輯下判斷」，寫下：", "gold_note": "土著化＝外來者思維邏輯同化，轉化為在地視角", "verify_key": "同化"}}, {"id": 27, "category": "非連續文本", "official_ans": "B", "stem_img": "assets/images/q27_stem.png", "passage_img": "assets/images/passage_27_28.png", "passage_title": "題組【27～28 題】資料：F1 賽車新加坡大獎賽", "options": {"A": "練習賽分為2場進行，排位賽分為3階段進行，正賽僅會進行1場", "B": "練習賽至多22位車手參賽，排位賽各階段參賽人數不同，正賽共有10位車手參賽", "C": "練習賽以角逐桿位為目標，排位賽以爭取正賽資格為目標，正賽以追求獎盃為目標", "D": "練習賽每次自由練習有3小時，排位賽各階段皆不足半小時，正賽固定1.5小時～2小時"}, "correct_desc": "(B) 練習賽至多22位車手參賽，排位賽各階段參賽人數不同，正賽共有10位車手爭奪前排起跑。", "ghosts": [{"opt": "A", "text": "練習賽分為2場進行，排位賽分為3階段進行，正賽僅會進行1場", "trap_word": "分為2場", "explain": "練習賽明確分為三段（FP1、FP2、FP3），非2場！", "correction": "自由練習分為3段，各1小時", "tokens": [{"text": "練習賽", "isTrap": false}, {"text": "分為2場", "isTrap": true}, {"text": "進行，", "isTrap": false}, {"text": "排位賽分", "isTrap": false}, {"text": "為3階段", "isTrap": false}, {"text": "進行，", "isTrap": false}, {"text": "正賽僅會", "isTrap": false}, {"text": "進行1場", "isTrap": false}]}, {"opt": "C", "text": "練習賽以角逐桿位為目標，排位賽以爭取正賽資格為目標", "trap_word": "角逐桿位為目標", "explain": "爭取「桿位（第一起跑位）」是排位賽 Q3 的目標，練習賽只是調校測試！", "correction": "桿位由排位賽決定，練習賽為調校車況", "tokens": [{"text": "練習賽以", "isTrap": false}, {"text": "角逐桿位為目標", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "排位賽以", "isTrap": false}, {"text": "爭取正賽", "isTrap": false}, {"text": "資格為目", "isTrap": false}, {"text": "標", "isTrap": false}]}, {"opt": "D", "text": "練習賽每次自由練習有3小時，正賽固定1.5小時～2小時", "trap_word": "固定時間", "explain": "每次自由練習僅1小時（總共3小時）；正賽最長可至3小時，非固定不變！", "correction": "每次練習1小時；正賽最長可達3小時", "tokens": [{"text": "練習賽每次自由練習有3小時", "isTrap": false}, {"text": "，正賽固定1.5小時～2小時", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 27 題 Q1淘汰6人、Q2淘汰6人旁標註算式，寫下：", "gold_note": "6+6+10＝22人參賽；排位賽遞減篩選", "verify_key": "22"}}, {"id": 28, "category": "情境推論", "official_ans": "A", "stem_img": "assets/images/q28_stem.png", "passage_img": "assets/images/passage_27_28.png", "passage_title": "題組【27～28 題】資料：F1 賽車新加坡大獎賽", "options": {"A": "安東：我觀賞了一場長達兩小時的比賽，競賽車手在各圈中互有領先", "B": "羅素：我在一天內觀賞兩場競賽，最後只剩下十輛賽車在跑道上奔馳", "C": "萊爾：頒獎儀式在比賽結束之後舉行，只有跑最快的那一位車手獲得獎項", "D": "漢頓：賽道上多數車手僅跑幾圈就回維修區調整，期待明天的比賽更精采"}, "correct_desc": "(A) 安東：觀賞長達兩小時的比賽，車手在各圈互有領先。（正賽耗時約1.5至2小時，計總圈數）。", "ghosts": [{"opt": "B", "text": "羅素：我在一天內觀賞兩場競賽，最後只剩下十輛賽車在跑道上奔馳", "trap_word": "一天兩場", "explain": "正賽在週日舉行且全天僅此一場！一天看兩場的是週五或週六的賽程。", "correction": "正賽週日舉行且一日僅一場", "tokens": [{"text": "羅素：我在一天內觀賞兩場競賽，", "isTrap": false}, {"text": "最後只剩下十輛賽車在跑道上奔馳", "isTrap": true}]}, {"opt": "C", "text": "萊爾：頒獎儀式在比賽結束後舉行，只有跑最快的那一位車手獲得獎項", "trap_word": "只有一位得獎", "explain": "正賽結束後的頒獎典禮是頒發獎盃給「前三名」車手並噴香檳！", "correction": "正賽頒獎表揚前三名，非僅一人", "tokens": [{"text": "萊爾：頒獎儀式在比賽結束後舉行", "isTrap": false}, {"text": "，只有跑最快的那一位車手獲得獎項", "isTrap": true}]}, {"opt": "D", "text": "漢頓：賽道上多數車手僅跑幾圈就回維修區調整，期待明天的比賽更精采", "trap_word": "回維修區期待明天", "explain": "回維修區測試車況是「練習賽」特徵，正賽就是最終日，明天已無比賽！", "correction": "跑幾圈回廠調校為練習賽特徵", "tokens": [{"text": "漢頓：賽道上多數車手僅跑幾圈就回", "isTrap": false}, {"text": "維修區調整，期待明天的比賽更精采", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 28 題 (A) 選項「兩小時」旁畫線，寫下：", "gold_note": "耗時1.5～2小時、各圈爭先、週日唯一場＝正賽", "verify_key": "週日"}}, {"id": 29, "category": "科普說明文", "official_ans": "C", "stem_img": "assets/images/q29_stem.png", "passage_img": "assets/images/passage_29_30.png", "passage_title": "題組【29～30 題】短文：蟻群效應與螞蟻演化", "options": {"A": "第一隻回巢穴的螞蟻：在團隊中發號施令者", "B": "經最短路徑搬運食物：執行管理階層的決策", "C": "螞蟻沿路釋放費洛蒙：傳遞相關訊息以利工作進行", "D": "從不同路徑返回巢穴：各自設定任務中的不同目標"}, "correct_desc": "(C) 螞蟻沿路釋放費洛蒙：傳遞相關訊息以利工作進行。（藉由環境中介傳遞非直接訊息）。", "ghosts": [{"opt": "A", "text": "第一隻回巢穴的螞蟻：在團隊中發號施令者", "trap_word": "發號施令者", "explain": "蟻群效應核心是「沒有任何監督直接指令」，完全沒有主管發號施令！", "correction": "自我組織無需指揮官發號施令", "tokens": [{"text": "第一隻回", "isTrap": false}, {"text": "巢穴的螞", "isTrap": false}, {"text": "蟻：在團", "isTrap": false}, {"text": "隊中", "isTrap": false}, {"text": "發號施令者", "isTrap": true}]}, {"opt": "B", "text": "經最短路徑搬運食物：執行管理階層的決策", "trap_word": "管理階層決策", "explain": "最佳路徑是群體機率與費洛蒙濃度自然收斂而成的，無管理階層！", "correction": "路徑是群體自發收斂，無管理決策", "tokens": [{"text": "經最短路徑搬運食物", "isTrap": false}, {"text": "：執行管理階層的決策", "isTrap": true}]}, {"opt": "D", "text": "從不同路徑返回巢穴：各自設定任務中的不同目標", "trap_word": "設定不同目標", "explain": "全體螞蟻的目標完全一致（把食物搬回巢穴），並無設定不同目標！", "correction": "搬運食物目標完全一致，無各自分歧", "tokens": [{"text": "從不同路徑返回巢穴：各", "isTrap": false}, {"text": "自設定任務中的不同目標", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 29 題文章圈出「環境擔任訊息中介」與「非直接式溝通」，寫下：", "gold_note": "費洛蒙留痕＝環境中介傳訊，無主管也能協同運作", "verify_key": "中介"}}, {"id": 30, "category": "科普圖文轉換", "official_ans": "B", "stem_img": "assets/images/q30_stem.png", "passage_img": "assets/images/passage_29_30.png", "passage_title": "題組【29～30 題】短文：蟻群效應與螞蟻演化", "options": {"A": "僅圖1中第一隻找到食物的螞蟻會留下氣味線索", "B": "圖2螞蟻應是依循留有氣味線索的路徑找到食物", "C": "圖3顯示先回巢者釋放的費洛蒙較後回巢者強烈", "D": "由圖2到圖3凸顯經最短路徑才能順利搬回食物"}, "correct_desc": "(B) 圖2螞蟻應是依循留有氣味線索的路徑找到食物。（走短路徑者先抵達，吸引更多同伴依循）。", "ghosts": [{"opt": "A", "text": "僅圖1中第一隻找到食物的螞蟻會留下氣味線索", "trap_word": "僅第一隻留下線索", "explain": "文中說明「螞蟻會在攜帶食物時沿路釋放」，所有搬運的螞蟻都會留氣味！", "correction": "所有搬運螞蟻都會沿途釋放費洛蒙", "tokens": [{"text": "僅圖1中第一隻找到食", "isTrap": false}, {"text": "物的螞蟻會留下氣味線索", "isTrap": true}]}, {"opt": "C", "text": "圖3顯示先回巢者釋放的費洛蒙較後回巢者強烈", "trap_word": "先回巢者較強烈", "explain": "最短路徑氣味強是因為「頻率高、多隻反覆加強標記」，非單隻濃度不同！", "correction": "氣味濃是因往返頻率高反覆疊加", "tokens": [{"text": "圖3顯示先回巢者釋放", "isTrap": false}, {"text": "的費洛蒙較後回巢者強烈", "isTrap": true}]}, {"opt": "D", "text": "由圖2到圖3凸顯經最短路徑才能順利搬回食物", "trap_word": "才能順利搬回", "explain": "走長路徑一樣能搬回食物，只是耗時較多，並非走長路就無法搬回！", "correction": "長路徑亦可搬回，非僅短路徑才能順利", "tokens": [{"text": "由圖2到", "isTrap": false}, {"text": "圖3凸顯", "isTrap": false}, {"text": "經最短路", "isTrap": false}, {"text": "徑", "isTrap": false}, {"text": "才能順利搬回", "isTrap": true}, {"text": "食物", "isTrap": false}]}], "notebook_task": {"instruction": "請在第 30 題圖2旁邊用箭頭標註，並用紅筆寫下：", "gold_note": "先回巢者留氣味，引導後續群體聚焦較短路徑", "verify_key": "氣味"}}, {"id": 31, "category": "現代小說閱讀", "official_ans": "B", "stem_img": "assets/images/q31_stem.png", "passage_img": "assets/images/passage_31_32.png", "passage_title": "題組【31～32 題】小說：陳浩基《13．67》", "options": {"A": "多年的工作經驗麻痺了駱督察，使其面對死亡無所動搖", "B": "駱督察與病床上的老人感情深厚，為其瀕臨死亡而憂心", "C": "醫院氣味讓駱督察憶起親人病逝的過往，因而心生厭惡", "D": "駱督察自欺欺人，不願接受關振鐸警司已經離世的事實"}, "correct_desc": "(B) 駱督察與病床上的老人感情深厚，為其瀕臨死亡而憂心。（文末點出關振鐸視駱督察如子）。", "ghosts": [{"opt": "A", "text": "多年的工作經驗麻痺了駱督察，使其面對死亡無所動搖", "trap_word": "無所動搖", "explain": "駱督察見過無數屍體，但面對師傅時「心情更是沉重、不安未消減」，內心極度動搖！", "correction": "駱督察心情極為沉重，絕非麻痺無動於衷", "tokens": [{"text": "多年的工", "isTrap": false}, {"text": "作經驗麻", "isTrap": false}, {"text": "痺了駱督", "isTrap": false}, {"text": "察，", "isTrap": false}, {"text": "使其面對", "isTrap": false}, {"text": "死亡", "isTrap": false}, {"text": "無所動搖", "isTrap": true}]}, {"opt": "C", "text": "醫院氣味讓駱督察憶起親人病逝的過往，因而心生厭惡", "trap_word": "親人病逝過往", "explain": "醫院氣味是讓他聯想到「停屍間（見過無數凶案屍體）」，非親人病逝！", "correction": "是聯想到停屍間與死人，非親人病逝", "tokens": [{"text": "醫院氣味讓駱督察憶起親人", "isTrap": false}, {"text": "病逝的過往，因而心生厭惡", "isTrap": true}]}, {"opt": "D", "text": "駱督察自欺欺人，不願接受關振鐸警司已經離世的事實", "trap_word": "已經離世", "explain": "螢幕上脈搏仍在跳動，關警司是「瀕死重病插管」，尚未離世！", "correction": "關警司仍在搶救尚未斷氣，非已離世", "tokens": [{"text": "駱督察自", "isTrap": false}, {"text": "欺欺人，", "isTrap": false}, {"text": "不願接受", "isTrap": false}, {"text": "關振鐸警", "isTrap": false}, {"text": "司", "isTrap": false}, {"text": "已經離世", "isTrap": true}, {"text": "的事實", "isTrap": false}]}], "notebook_task": {"instruction": "請在選文最後一段圈出「就像兒子」與「心情沉重」，寫下：", "gold_note": "雖歷經命案麻木，面臨如父師傅瀕死依然痛徹心扉", "verify_key": "如父"}}, {"id": 32, "category": "現代小說思維", "official_ans": "D", "stem_img": "assets/images/q32_stem.png", "passage_img": "assets/images/passage_31_32.png", "passage_title": "題組【31～32 題】小說：陳浩基《13．67》", "options": {"A": "積極求取更高職位，以便掌握指揮警隊的實際權力，藉此造福市民", "B": "面對人情與法理的抉擇時，應以制度規章為準則，而非受情意左右", "C": "警察須嚴守紀律，即使因上級指示而無法保護市民也足以無愧於心", "D": "在以維護公平正義為目標的前提下，有時不免要懷疑制度的合理性"}, "correct_desc": "(D) 在以維護公平正義為目標的前提下，有時不免要懷疑制度的合理性。", "ghosts": [{"opt": "A", "text": "積極求取更高職位，以便掌握指揮警隊的實際權力", "trap_word": "求取更高職位", "explain": "關振鐸強調辦案核心價值是保護市民與公義，全無追逐權位鑽營之意！", "correction": "重點在保護市民，非鑽營追求更高官職", "tokens": [{"text": "積極", "isTrap": false}, {"text": "求取更高職位", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "以便掌握", "isTrap": false}, {"text": "指揮警隊", "isTrap": false}, {"text": "的實際權", "isTrap": false}, {"text": "力", "isTrap": false}]}, {"opt": "B", "text": "面對人情與法理的抉擇時，應以制度規章為準則", "trap_word": "以制度為準則", "explain": "關警司明確反對死板規則！若制度害人便該反抗，絕不以死制度為唯一準則！", "correction": "反對盲從制度，制度害人時應反抗之", "tokens": [{"text": "面對人情與法理的抉擇", "isTrap": false}, {"text": "時，應以制度規章為準則", "isTrap": true}]}, {"opt": "C", "text": "警察須嚴守紀律，即使因上級指示無法保護市民也無愧於心", "trap_word": "無法保護也無愧", "explain": "關警司直言保護市民是根本天職，若盲從上級指示而傷害市民便是失職！", "correction": "保護市民是首要，絕不可因遵從命令而害民", "tokens": [{"text": "警察須嚴守紀律，即使因上級", "isTrap": false}, {"text": "指示無法保護市民也無愧於心", "isTrap": true}]}], "notebook_task": {"instruction": "請在第 32 題圈出「警察真正任務是保護市民」與「反抗僵化制度」，寫下：", "gold_note": "守護正義高於僵化體制，不盲從死規矩", "verify_key": "正義"}}, {"id": 33, "category": "臺灣史地文本", "official_ans": "D", "stem_img": "assets/images/q33_stem.png", "passage_img": "assets/images/passage_33_34.png", "passage_title": "題組【33～34 題】短文：臺灣米的百年身世", "options": {"A": "雙冬的培植改變了秈米營養與外觀，且有益於提升稻作產量", "B": "臺灣稻作產量受戰爭影響而下降，故引進粳米以解決此問題", "C": "神力、龜治是將中村種改良，所培育出適合種於臺灣的品種", "D": "臺中65號結合日本稻與臺灣陸稻的基因，促使蓬萊米普及"}, "correct_desc": "(D) 臺中65號結合日本稻與臺灣陸稻的基因，促使蓬萊米普及。（1929年育成，1935年面積超越在來米）。", "ghosts": [{"opt": "A", "text": "雙冬的培植改變了秈米營養與外觀，且有益於提升稻作產量", "trap_word": "改變營養外觀", "explain": "雙冬打破一年一作限制可兩收，但文中完全未曾提及改變外觀與營養！", "correction": "雙冬是縮短週期兩熟，未改變外觀與營養", "tokens": [{"text": "雙冬的培植改變了秈米營養與", "isTrap": false}, {"text": "外觀，且有益於提升稻作產量", "isTrap": true}]}, {"opt": "B", "text": "臺灣稻作產量受戰爭影響而下降，故引進粳米以解決此問題", "trap_word": "臺灣產量下降", "explain": "是「日本國內」因戰爭面臨糧食短缺，才向殖民地臺灣尋求米源，非臺灣產量下降！", "correction": "是日本本土糧荒，非臺灣產量下降", "tokens": [{"text": "臺灣稻作產量受戰爭影響而下", "isTrap": false}, {"text": "降，故引進粳米以解決此問題", "isTrap": true}]}, {"opt": "C", "text": "神力、龜治是將中村種改良，所培育出適合種於臺灣的品種", "trap_word": "將中村種改良", "explain": "文中明確指出神力與龜治是「兩個原本的日本稻品種」，非中村種改良而來！", "correction": "神力與龜治皆為日本品種，非中村種改良", "tokens": [{"text": "神力、", "isTrap": false}, {"text": "龜治是", "isTrap": false}, {"text": "將中村種改良", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "所培育出", "isTrap": false}, {"text": "適合種於", "isTrap": false}, {"text": "臺灣的品", "isTrap": false}, {"text": "種", "isTrap": false}]}], "notebook_task": {"instruction": "請在選文第四段圈出「混入山區陸稻基因」與「臺中65號」，寫下：", "gold_note": "日本稻＋台灣野生陸稻基因＝台中65號蓬萊米霸業", "verify_key": "台中65號"}}, {"id": 34, "category": "史實與曲線圖", "official_ans": "A", "stem_img": "assets/images/q34_stem.png", "passage_img": "assets/images/passage_33_34.png", "passage_title": "題組【33～34 題】短文：臺灣米的百年身世", "options": {"A": "1925年秈米（在來米）面積高於粳米（蓬萊米），而在1935年粳米面積反超秈米", "B": "1925年粳米面積已高於秈米，1935年兩者差距持續擴大", "C": "中村種栽培面積自1925年至1935年一路超越臺中65號", "D": "臺中65號自1925年起即超越中村種"}, "correct_desc": "(A) 1925年秈米遠高於粳米，至1935年粳米曲線黃金交叉超越秈米。", "ghosts": [{"opt": "B", "text": "圖形(B)：1925年粳米面積已高於秈米", "trap_word": "1925已超越", "explain": "1925年粳米才剛在平地推廣，當時在來米（秈米）仍是絕對主角！", "correction": "1925年仍是在來米（秈米）占多數", "tokens": [{"text": "圖形(B)：1925", "isTrap": false}, {"text": "年粳米面積已高於秈米", "isTrap": true}]}, {"opt": "C", "text": "圖形(C)：中村種面積一路高於臺中65號", "trap_word": "中村種高於台中65", "explain": "臺中65號育成後產量口感更佳，大面積栽植促成黃金交叉，遠超中村種！", "correction": "台中65號產量更優，普及度超越中村種", "tokens": [{"text": "圖形(C)：中村種面", "isTrap": false}, {"text": "積一路高於臺中65號", "isTrap": true}]}, {"opt": "D", "text": "圖形(D)：臺中65號早在1925年即開始種植", "trap_word": "1925年種植", "explain": "臺中65號是在「1929年」才培育出來的，不可能在1925年就大面積種植！", "correction": "台中65號於1929年育成，非1925年", "tokens": [{"text": "圖形(D)：臺中65號", "isTrap": false}, {"text": "早在1925年即開始種植", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 34 題 (A) 圖的交點處圈記，並用紅筆寫下：", "gold_note": "1935年蓬萊米（粳米）栽培面積正式反超在來米（秈米）", "verify_key": "1935"}}, {"id": 35, "category": "現代散文閱讀", "official_ans": "C", "stem_img": "assets/images/q35_stem.png", "passage_img": "assets/images/passage_35_37.png", "passage_title": "題組【35～37 題】文章：保護膜的悲壯相遇", "options": {"A": "留戀往昔生活中的事物，不願意正視未來", "B": "不斷更換物品，營造未受時間摧折的假象", "C": "藉由不改變，讓事物彷彿維持住原有樣貌", "D": "透過修補，將物品的使用期限盡可能延長"}, "correct_desc": "(C) 藉由不改變，讓事物彷彿維持住原有樣貌。（不撕膜以延長『新』的感覺，逃避時間摧折）。", "ghosts": [{"opt": "A", "text": "留戀往昔生活中的事物，不願意正視未來", "trap_word": "留戀往昔", "explain": "保留保護膜是為了追求東西「永遠是新的」，並非懷舊留戀過去事物！", "correction": "是貪戀新物的感覺，非懷念舊事物", "tokens": [{"text": "留戀往昔", "isTrap": true}, {"text": "生活中的", "isTrap": false}, {"text": "事物，", "isTrap": false}, {"text": "不願意正", "isTrap": false}, {"text": "視未來", "isTrap": false}]}, {"opt": "B", "text": "不斷更換物品，營造未受時間摧折的假象", "trap_word": "不斷更換物品", "explain": "作者指出台灣人習慣「不丟、修補拼湊，絕不隨意換新」，與不斷換物品完全相反！", "correction": "台灣人惜物不換新，是靠不撕膜延續新感", "tokens": [{"text": "不斷更換物品", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "營造未受", "isTrap": false}, {"text": "時間摧折", "isTrap": false}, {"text": "的假象", "isTrap": false}]}, {"opt": "D", "text": "透過修補，將物品的使用期限盡可能延長", "trap_word": "透過修補延長", "explain": "永遠的暫時是指「不撕下保護膜的拖延狀態」，並非指手工修補！", "correction": "永遠的暫時指不撕保護膜的停滯心態", "tokens": [{"text": "透過修補，將物品的", "isTrap": false}, {"text": "使用期限盡可能延長", "isTrap": true}]}], "notebook_task": {"instruction": "請在選文第四段圈出「讓暫時不斷延長」與「使愛物避開摧折」，寫下：", "gold_note": "不撕膜拖延不變，營造物品永保如新的心理幻象", "verify_key": "幻象"}}, {"id": 36, "category": "社會現象剖析", "official_ans": "D", "stem_img": "assets/images/q36_stem.png", "passage_img": "assets/images/passage_35_37.png", "passage_title": "題組【35～37 題】文章：保護膜的悲壯相遇", "options": {"A": "人們只知追求事物的美觀而忽略其實用性", "B": "大眾抱持過時的環保觀念一味節儉與惜物", "C": "新、舊事物的融合往往不容易被大眾接受", "D": "對生活環境的慣性使人們不在意周遭景觀"}, "correct_desc": "(D) 對生活環境的慣性使人們不在意周遭景觀。（文章末段：對環境的習慣性怠慢，住久看慣了便懶得撕）。", "ghosts": [{"opt": "A", "text": "人們只知追求事物的美觀而忽略其實用性", "trap_word": "追求美觀忽略實用", "explain": "作者恰恰指出留著泛黃保護膜非常「不美觀」，人們根本不在乎美觀！", "correction": "留膜反而醜陋，說明大眾對美觀怠慢", "tokens": [{"text": "人們只知追求事物的", "isTrap": false}, {"text": "美觀而忽略其實用性", "isTrap": true}]}, {"opt": "B", "text": "大眾抱持過時的環保觀念一味節儉與惜物", "trap_word": "過時環保觀念", "explain": "文中討論的是愛新物與習慣怠慢的心態，並未批評惜物是「過時環保」！", "correction": "文中未批判惜物是過時觀念", "tokens": [{"text": "大眾抱持過時的環保", "isTrap": false}, {"text": "觀念一味節儉與惜物", "isTrap": true}]}, {"opt": "C", "text": "新、舊事物的融合往往不容易被大眾接受", "trap_word": "新舊事物融合", "explain": "全文旨在剖析不撕保護膜的心理機制，未探討文化上的新舊融合難題！", "correction": "全文未探討新舊事物融合問題", "tokens": [{"text": "新、舊事物的融合往", "isTrap": false}, {"text": "往不容易被大眾接受", "isTrap": true}]}], "notebook_task": {"instruction": "請在選文最後一段圈出「習慣性怠慢」與「融入環境成為背景」，寫下：", "gold_note": "久居成麻木，對環境景觀雜亂習以為常的怠慢", "verify_key": "怠慢"}}, {"id": 37, "category": "寫作手法評析", "official_ans": "B", "stem_img": "assets/images/q37_stem.png", "passage_img": "assets/images/passage_35_37.png", "passage_title": "題組【35～37 題】文章：保護膜的悲壯相遇", "options": {"A": "運用連續問句，否定保護膜最終被撕下的可能原因", "B": "藉由科幻片場景，指出臺灣人不撕下保護膜的常態", "C": "以保護膜貫串全文，說明人生中有許多可有可無的事物", "D": "將保護膜等同於陳舊概念，闡述愛物是大眾普遍的習慣"}, "correct_desc": "(B) 藉由科幻片場景，指出臺灣人不撕下保護膜的常態。（英雄靠不鏽鋼門殘留保護膜認出台灣）。", "ghosts": [{"opt": "A", "text": "運用連續問句，否定保護膜最終被撕下的可能原因", "trap_word": "否定可能原因", "explain": "作者第三段的問句是引導讀者反思「真有必要留著嗎？」，並非否定撕下的原因！", "correction": "問句是促使讀者反思留膜之荒謬，非否定撕膜", "tokens": [{"text": "運用連續問句，否定保護", "isTrap": false}, {"text": "膜最終被撕下的可能原因", "isTrap": true}]}, {"opt": "C", "text": "以保護膜貫串全文，說明人生中有許多可有可無的事物", "trap_word": "可有可無的事物", "explain": "保護膜是作為剖析國人「惜物迷思與環境怠惰」的文化符號，非人生感悟！", "correction": "保護膜是用以解剖國民心理，非感嘆人生", "tokens": [{"text": "以保護膜", "isTrap": false}, {"text": "貫串全文", "isTrap": false}, {"text": "，", "isTrap": false}, {"text": "說明人生", "isTrap": false}, {"text": "中有許多", "isTrap": false}, {"text": "可有可無的事物", "isTrap": true}]}, {"opt": "D", "text": "將保護膜等同於陳舊概念，闡述愛物是大眾普遍的習慣", "trap_word": "等同陳舊概念", "explain": "文章前段將保護膜連結的是「新物」，而非陳舊概念！", "correction": "保護膜在前段是像徵「新物」的延長", "tokens": [{"text": "將保護膜等同於陳舊概念，", "isTrap": false}, {"text": "闡述愛物是大眾普遍的習慣", "isTrap": true}]}], "notebook_task": {"instruction": "請在選文第一段「末日科幻片」旁打勾，並用紅筆寫下：", "gold_note": "虛構末日電影開場破題，諷刺台灣不撕膜的集體怪癖", "verify_key": "破題"}}, {"id": 38, "category": "文言論說核心", "official_ans": "D", "stem_img": "assets/images/q38_stem.png", "passage_img": "assets/images/passage_38_39.png", "passage_title": "題組【38～39 題】文言文：崔瑗《風俗議》", "options": {"A": "人心與風俗皆是欲望展現", "B": "人心比風俗更常發生變化", "C": "人心較複雜而風俗較單一", "D": "人心與風俗之間互有影響"}, "correct_desc": "(D) 人心與風俗之間互有影響。「交相環轉」＝互為因果、循環影響。", "ghosts": [{"opt": "A", "text": "人心與風俗皆是欲望展現", "trap_word": "皆是欲望展現", "explain": "盛世時人心安於儉樸，儉樸絕非欲望展現，選項以偏概全！", "correction": "盛世人心守儉安貧，非皆是欲望", "tokens": [{"text": "人心與風", "isTrap": false}, {"text": "俗", "isTrap": false}, {"text": "皆是欲望展現", "isTrap": true}]}, {"opt": "B", "text": "人心比風俗更常發生變化", "trap_word": "人心更常發生變化", "explain": "作者強調兩者互相轉化牽引，從未比較兩者誰變動更頻繁！", "correction": "強調兩者相互循環，未比較變化頻率", "tokens": [{"text": "人心比風俗", "isTrap": false}, {"text": "更常發生變化", "isTrap": true}]}, {"opt": "C", "text": "人心較複雜而風俗較單一", "trap_word": "人心複雜風俗單一", "explain": "作者未曾分析心理學上的複雜度，焦點在於兩者因果循環！", "correction": "文中未提及複雜或單一之比較", "tokens": [{"text": "人心較複雜", "isTrap": false}, {"text": "而風俗較單一", "isTrap": true}]}], "notebook_task": {"instruction": "請在選文第一段圈出「交相環轉者也」，寫下：", "gold_note": "人心造風俗，風俗移人心，兩者互為因果循環", "verify_key": "循環"}}, {"id": 39, "category": "古今對比分析", "official_ans": "C", "stem_img": "assets/images/q39_stem.png", "passage_img": "assets/images/passage_38_39.png", "passage_title": "題組【38～39 題】文言文：崔瑗《風俗議》", "options": {"A": "太平盛世：用盡手段追求財富；今世：用盡手段追求仕途", "B": "太平盛世：窮困者靠借貸過活；今世：窮困者常竊盜謀財", "C": "太平盛世：金錢大多用於儲蓄；今世：金錢使用較不節制", "D": "太平盛世：士人具較崇高地位；今世：商人具較崇高地位"}, "correct_desc": "(C) 太平盛世：金錢大多用於儲蓄（餘金藏於窖內）；今世：金錢使用較不節制（窮人亦思華服盛筵而效之）。", "ghosts": [{"opt": "A", "text": "太平盛世：用盡手段追求財富；今世：用盡手段追求仕途", "trap_word": "盛世追求財富", "explain": "太平盛世「人心寧處其儉，不求誇大，不求子母廣生」，安貧守己，絕不用盡手段追逐財富！", "correction": "盛世儉約本分不求暴利，未用盡手段", "tokens": [{"text": "太平盛世：用盡手段追求財", "isTrap": false}, {"text": "富；今世：用盡手段追求仕途", "isTrap": true}]}, {"opt": "B", "text": "太平盛世：窮困者靠借貸過活；今世：窮困者常竊盜謀財", "trap_word": "盛世靠借貸", "explain": "文中是說今世窮人借貸無門才去行竊行搶，並未提及盛世窮人靠借貸！", "correction": "借貸無門而行竊是今世之弊，非盛世", "tokens": [{"text": "太平盛世：窮困者靠借貸過", "isTrap": false}, {"text": "活；今世：窮困者常竊盜謀財", "isTrap": true}]}, {"opt": "D", "text": "太平盛世：士人具較崇高地位；今世：商人具較崇高地位", "trap_word": "商人較崇高", "explain": "今世依舊是庶民想戴儒冠改換門楣，並無商人地位超越士人之敘述！", "correction": "文中未曾提及商人地位高於士人", "tokens": [{"text": "太平盛世：士人具較崇高地", "isTrap": false}, {"text": "位；今世：商人具較崇高地位", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 39 題表格 (C) 選項打勾，並在題旁寫下：", "gold_note": "盛世窖金守儉安本分；今世借貸華服無節制", "verify_key": "節制"}}, {"id": 40, "category": "文言字詞義", "official_ans": "C", "stem_img": "assets/images/q40_stem.png", "passage_img": "assets/images/passage_40_42.png", "passage_title": "題組【40～42 題】文言文：司馬光求諫", "options": {"A": "改詔「行」之：前往", "B": "並「許」進實封狀：稱讚", "C": "微有所「涉」：相關", "D": "「陳」國家安危大計：排列"}, "correct_desc": "(C) 微有所「涉」：相關、牽涉。指進言內容稍微牽涉本職以外的事務。", "ghosts": [{"opt": "A", "text": "改詔「行」之：前往", "trap_word": "前往", "explain": "詔書是朝廷政令法規，「行之」是指發布「推行、實施」，非動身前往！", "correction": "行 之意為 推行、實施", "tokens": [{"text": "改詔「行", "isTrap": false}, {"text": "」之：", "isTrap": false}, {"text": "前往", "isTrap": true}]}, {"opt": "B", "text": "並「許」進實封狀：稱讚", "trap_word": "稱讚", "explain": "「許」在此處是「准許、允許」，准許臣民呈遞密封奏摺，非讚揚！", "correction": "許 之意為 准許、許可", "tokens": [{"text": "並「許」", "isTrap": false}, {"text": "進實封狀", "isTrap": false}, {"text": "：", "isTrap": false}, {"text": "稱讚", "isTrap": true}]}, {"opt": "D", "text": "「陳」國家安危大計：排列", "trap_word": "排列", "explain": "「陳」在此處指「陳述、述說」大計，非排列物品之意！", "correction": "陳 之意為 陳述、說明", "tokens": [{"text": "「陳」國", "isTrap": false}, {"text": "家安危大", "isTrap": false}, {"text": "計：", "isTrap": false}, {"text": "排列", "isTrap": true}]}], "notebook_task": {"instruction": "請在紙本第 40 題各選項旁寫下正確字義：", "gold_note": "行＝推行、許＝准許、涉＝牽涉相關、陳＝陳述", "verify_key": "牽涉"}}, {"id": 41, "category": "文言論辯宗旨", "official_ans": "A", "stem_img": "assets/images/q41_stem.png", "passage_img": "assets/images/passage_40_42.png", "passage_title": "題組【40～42 題】文言文：司馬光求諫", "options": {"A": "六事規範的內容，與詔書初衷有所衝突", "B": "六事作為詔書施行細則，內容不夠完備", "C": "六事旨在列出違反詔書的罰則，但刑罰過重", "D": "六事所述一味奉承，與詔書的主旨毫無關聯"}, "correct_desc": "(A) 六事規範的內容，與詔書初衷有所衝突。（詔書本意廣開言路，六事卻動輒得咎，變相拒諫）。", "ghosts": [{"opt": "B", "text": "六事作為詔書施行細則，內容不夠完備", "trap_word": "不夠完備", "explain": "司馬光批評的是六事「徹底違背求諫初衷、防堵言論」，絕非嫌細則不夠完備！", "correction": "司馬光斥責六事窒礙言路，非細節不全", "tokens": [{"text": "六事作為", "isTrap": false}, {"text": "詔書施行", "isTrap": false}, {"text": "細則，", "isTrap": false}, {"text": "內容", "isTrap": false}, {"text": "不夠完備", "isTrap": true}]}, {"opt": "C", "text": "六事旨在列出違反詔書的罰則，但刑罰過重", "trap_word": "刑罰過重", "explain": "司馬光的核心訴求是根本不該立六條罪狀讓人噤聲，爭點在言路暢通與否，非刑度輕重！", "correction": "問題在讓人不敢說話，非刑罰過重", "tokens": [{"text": "六事旨在", "isTrap": false}, {"text": "列出違反", "isTrap": false}, {"text": "詔書的罰", "isTrap": false}, {"text": "則，", "isTrap": false}, {"text": "但", "isTrap": false}, {"text": "刑罰過重", "isTrap": true}]}, {"opt": "D", "text": "六事所述一味奉承，與詔書的主旨毫無關聯", "trap_word": "一味奉承", "explain": "六事是大臣心懷不悅設下的入罪羅網，並非諂媚奉承之詞！", "correction": "六事為防範罪人之條款，非諂媚奉承", "tokens": [{"text": "六事所述", "isTrap": false}, {"text": "一味奉承", "isTrap": true}, {"text": "，", "isTrap": false}, {"text": "與詔書的", "isTrap": false}, {"text": "主旨毫無", "isTrap": false}, {"text": "關聯", "isTrap": false}]}], "notebook_task": {"instruction": "請在選文圈出「此非求諫，乃拒諫也」，寫下：", "gold_note": "本欲廣開言路，卻設六罪堵嘴＝與初衷背道而馳", "verify_key": "拒諫"}}, {"id": 42, "category": "歷史人物思想", "official_ans": "C", "stem_img": "assets/images/q42_stem.png", "passage_img": "assets/images/passage_40_42.png", "passage_title": "題組【40～42 題】文言文：司馬光求諫", "options": {"A": "司馬光認為身為臣子者不應該踰越本分", "B": "司馬光看不慣朝中大臣互相吹捧的陋習", "C": "司馬光主張君王應該多方聽取臣民的意見", "D": "司馬光因與太皇太后意見相左而上書建言"}, "correct_desc": "(C) 司馬光主張君王應該多方聽取臣民的意見。（首請開言路、許平民實封上奏、憂士人箝口）。", "ghosts": [{"opt": "A", "text": "司馬光認為身為臣子者不應該踰越本分", "trap_word": "不該踰越本分", "explain": "反諷！「犯非其分」是六事羅織罪名的藉口，司馬光認為若因本職以外就不敢建言國家將危！", "correction": "司馬光反對以本分藉口限制臣民言論", "tokens": [{"text": "司馬光認為身為臣", "isTrap": false}, {"text": "子者不應該踰越本分", "isTrap": true}]}, {"opt": "B", "text": "司馬光看不慣朝中大臣互相吹捧的陋習", "trap_word": "互相吹捧", "explain": "文中所提是大臣若褒貶同僚會被扣上「陰有所懷」的罪名，未提及吹捧陋習！", "correction": "文中討論褒貶群臣動輒得咎，無吹捧之事", "tokens": [{"text": "司馬光看", "isTrap": false}, {"text": "不慣朝中", "isTrap": false}, {"text": "大臣", "isTrap": false}, {"text": "互相吹捧", "isTrap": true}, {"text": "的陋習", "isTrap": false}]}, {"opt": "D", "text": "司馬光因與太皇太后意見相左而上書建言", "trap_word": "太后意見相左", "explain": "太皇太后主動將詔書拿給司馬光看，且聽取其意見「改詔行之」，兩人意見同盟，相左的是保守大臣！", "correction": "太后支持光之建言並改詔，非意見相左", "tokens": [{"text": "司馬光因", "isTrap": false}, {"text": "與太皇", "isTrap": false}, {"text": "太后意見相左", "isTrap": true}, {"text": "而上書建", "isTrap": false}, {"text": "言", "isTrap": false}]}], "notebook_task": {"instruction": "請在紙本第 42 題圈出「許進實封狀」與「恐天下之士益箝口結舌」，寫下：", "gold_note": "反對六事羅織罪名，力主虛懷廣開言路天下始有福", "verify_key": "言路"}}];
+
+    // 應用狀態管理（State-Engine-View 防腐分離架構）
+    const AppState = {
+      studentName: "",
+      studentSeat: "",
+      selectedQIds: [],
+      currentIndex: 0,
+      activeQId: null,
+      stemMode: "text",
+      showTrans: true,
+      drillResults: {},
+      practiceResults: {},
+      practiceQid: null,
+      drillQueue: [],
+      drillIndex: 0,
+      drillSkipped: {},
+      
+      // 紀錄各題狀態：{ [qId]: { ansSelected: null, ghostsFound: {}, stamped: false, goldNote: "" } }
+      records: {}
+    };
+
+    const App = {
+      init() {
+        this.renderGrid();
+        this.loadLocalCache();
+
+        // 點關鍵詞開啟浮動說明
+        document.addEventListener("click", (e) => {
+          const mark = e.target.closest ? e.target.closest(".ink-mark, .kw-chip") : null;
+          if (mark) {
+            this.showKwPop(mark);
+            return;
+          }
+          if (!e.target.closest || !e.target.closest("#kwPop")) {
+            this.hideKwPop();
+          }
+        }, true);
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            this.hideKwPop();
+            this.closeJump();
+          }
+        });
+        window.addEventListener("resize", () => this.hideKwPop());
+        window.addEventListener("scroll", () => this.hideKwPop(), true);
+      },
+
+      showToast(msg) {
+        const t = document.getElementById("toastBox");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+          t.classList.remove("show");
+        }, 2200);
+      },
+
+      renderGrid() {
+        const grid = document.getElementById("grid42");
+        grid.innerHTML = "";
+        EXAM_DB.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "q-box" + (AppState.selectedQIds.includes(item.id) ? " selected" : "");
+          div.id = "grid-box-" + item.id;
+          div.onclick = () => this.toggleQ(item.id);
+
+          const qNum = document.createElement("div");
+          qNum.className = "q-num";
+          qNum.textContent = item.id;
+
+          const qTag = document.createElement("div");
+          qTag.className = "q-tag";
+          qTag.textContent = item.category.slice(0, 2);
+
+          div.appendChild(qNum);
+          div.appendChild(qTag);
+          grid.appendChild(div);
+        });
+        this.updateSelectedCount();
+      },
+
+      toggleQ(id) {
+        const idx = AppState.selectedQIds.indexOf(id);
+        if (idx > -1) {
+          AppState.selectedQIds.splice(idx, 1);
+        } else {
+          AppState.selectedQIds.push(id);
+        }
+        AppState.selectedQIds.sort((a, b) => a - b);
+        this.updateGridClasses();
+        this.updateSelectedCount();
+      },
+
+      updateGridClasses() {
+        EXAM_DB.forEach(item => {
+          const el = document.getElementById("grid-box-" + item.id);
+          if (el) {
+            if (AppState.selectedQIds.includes(item.id)) {
+              el.classList.add("selected");
+            } else {
+              el.classList.remove("selected");
+            }
+          }
+        });
+      },
+
+      updateSelectedCount() {
+        const label = document.getElementById("selectedCountLabel");
+        label.textContent = `（已選 ${AppState.selectedQIds.length} 題）`;
+      },
+
+      selectAll() {
+        AppState.selectedQIds = EXAM_DB.map(d => d.id);
+        this.updateGridClasses();
+        this.updateSelectedCount();
+        this.showToast("已全選 42 題");
+      },
+
+      selectReading() {
+        AppState.selectedQIds = EXAM_DB.filter(d => d.id >= 25).map(d => d.id);
+        this.updateGridClasses();
+        this.updateSelectedCount();
+        this.showToast("已勾選題組題（第 25 至 42 題）");
+      },
+
+      selectClassical() {
+        AppState.selectedQIds = [8, 13, 15, 16, 19, 20, 21, 22, 23, 24, 38, 39, 40, 41, 42];
+        this.updateGridClasses();
+        this.updateSelectedCount();
+        this.showToast("已勾選文言文 15 題（第 8、13、15、16、19～24、38～42 題）");
+      },
+
+      clearSelection() {
+        AppState.selectedQIds = [];
+        this.updateGridClasses();
+        this.updateSelectedCount();
+        this.showToast("已清空選取");
+      },
+
+      startInvestigation() {
+        const nameInput = document.getElementById("studentName").value.trim();
+        const seatInput = document.getElementById("studentSeat").value.trim();
+        AppState.studentName = nameInput || "會考神探";
+        AppState.studentSeat = seatInput || "--";
+
+        if (AppState.selectedQIds.length === 0) {
+          this.showToast("請先勾選至少一題需要訂正的題號！");
+          return;
+        }
+
+        // 初始化 records
+        AppState.selectedQIds.forEach(id => {
+          if (!AppState.records[id]) {
+            AppState.records[id] = {
+              ansSelected: null,
+              ghostsFound: {},
+              stamped: false
+            };
+          }
+        });
+
+        AppState.currentIndex = 0;
+        this.showView("viewInvestigate");
+        this.renderCurrentQuestion();
+      },
+
+      showView(viewId) {
+        document.querySelectorAll(".view-card").forEach(v => v.classList.remove("active"));
+        document.getElementById(viewId).classList.add("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      },
+
+      showSetup() {
+        clearTimeout(this._advanceTimer);
+        this.showView("viewSetup");
+      },
+
+      renderCurrentQuestion() {
+        this.hideKwPop();
+        const qId = AppState.selectedQIds[AppState.currentIndex];
+        AppState.activeQId = qId;
+        const qData = EXAM_DB.find(d => d.id === qId);
+        if (!qData) return;
+
+        // 標題與元資訊
+        document.getElementById("caseBadge").textContent = `第 ${qId} 題`;
+        document.getElementById("categoryBadge").textContent = qData.category;
+        document.getElementById("progressStatus").textContent = `進度：${AppState.currentIndex + 1} / ${AppState.selectedQIds.length}`;
+        this.renderJumpInline();
+
+        // 題組選文（文字版優先，可切回原卷影本）
+        this.renderPassage(qData);
+
+        // 題幹（文字版優先，可切回原卷影本）
+        this.renderStem(qData);
+
+        // 步驟一：正解與錯項詳解
+        this.renderOptions(qData);
+        if (AppState.records[qData.id].ansSelected === qData.official_ans) {
+          this.renderAnalysis(qData);
+        }
+
+        // 步驟二：題本硃批任務
+        this.renderNotebookTask(qData);
+
+        // 導覽按鈕狀態
+        document.getElementById("btnPrev").disabled = (AppState.currentIndex === 0);
+        document.getElementById("btnNext").textContent = 
+          (AppState.currentIndex === AppState.selectedQIds.length - 1) ? "完成詳解・進入類題 ➔" : "下一題 ➔";
+      },
+
+      esc(str) {
+        return String(str == null ? "" : str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      },
+
+      getWordEntries(qData) {
+        const d = (typeof TRANSLATION_DB !== "undefined") ? TRANSLATION_DB[qData.id] : null;
+        if (!d) return [];
+        const arr = d.type === "classical" ? (d.glossary || []) : (d.keywords || []);
+        return arr.map((x, i) => ({
+          word: x.word,
+          anchor: x.anchor || x.word,
+          index: i
+        }));
+      },
+
+      getWordList(qData) {
+        return this.getWordEntries(qData).map(e => e.word);
+      },
+
+      getCorpus(qData) {
+        const parts = [];
+        const t = (typeof TEXT_DB !== "undefined") ? TEXT_DB[qData.id] : null;
+        const walk = (blocks) => {
+          (blocks || []).forEach(b => {
+            if (b.v) parts.push(b.v);
+            if (b.items) parts.push(b.items.join(""));
+            if (b.rows) {
+              b.rows.forEach(r => {
+                if (Array.isArray(r)) parts.push(r.join(""));
+                else parts.push((r.who || "") + (r.v || ""));
+              });
+            }
+            if (b.head) parts.push(b.head.join(""));
+            if (b.cols) b.cols.forEach(walk);
+          });
+        };
+        if (t && t.stem) walk(t.stem);
+        if (t && t.passage) walk(t.passage.blocks);
+        Object.keys(qData.options || {}).forEach(k => parts.push(qData.options[k]));
+        return parts.join("");
+      },
+
+      getMarkedEntries(qData) {
+        const flat = this.getCorpus(qData).replace(/[\s「」『』]/g, "");
+        return this.getWordEntries(qData).filter(
+          e => e.anchor && flat.includes(e.anchor.replace(/[\s「」『』]/g, ""))
+        );
+      },
+
+      getMarkList(qData) {
+        return this.getMarkedEntries(qData).map(e => e.word);
+      },
+
+      makeMarks(qData) {
+        return {
+          list: this.getMarkedEntries(qData),
+          counts: {},
+          lines: this.getClassicalLines(qData),
+          showTrans: AppState.showTrans !== false
+        };
+      },
+
+      getClassicalLines(qData) {
+        const d = (typeof TRANSLATION_DB !== "undefined") ? TRANSLATION_DB[qData.id] : null;
+        return (d && d.type === "classical" && d.lines) ? d.lines : [];
+      },
+
+      blockText(blocks) {
+        const parts = [];
+        const walk = (bs) => (bs || []).forEach(b => {
+          if (b.v) parts.push(b.v);
+          if (b.items) parts.push(b.items.join(""));
+          if (b.head) parts.push(b.head.join(""));
+          if (b.rows) b.rows.forEach(r => parts.push(Array.isArray(r) ? r.join("") : (r.who || "") + (r.v || "")));
+          if (b.cols) b.cols.forEach(walk);
+        });
+        walk(blocks);
+        return parts.join("\n");
+      },
+
+      renderClassicalLines(text, tag, marks) {
+        let pool = marks.lines.filter(l => tag ? l.tag === tag : !l.tag);
+        if (!pool.length) pool = marks.lines.filter(l => !l.tag);
+        if (!pool.length) return this.markHTML(text, marks);
+
+        let cursor = 0;
+        let html = "";
+        pool.forEach(line => {
+          const idx = text.indexOf(line.src, cursor);
+          if (idx < 0) return;
+          if (idx > cursor) html += this.markHTML(text.slice(cursor, idx), marks);
+          html += '<span class="cls-pair">'
+               + `<span class="cls-src">${this.markHTML(line.src, marks)}</span>`
+               + `<span class="cls-tr">${this.esc(line.plain)}</span>`
+               + "</span>";
+          cursor = idx + line.src.length;
+        });
+        if (cursor < text.length) html += this.markHTML(text.slice(cursor), marks);
+        return html;
+      },
+
+      toggleTrans() {
+        AppState.showTrans = !(AppState.showTrans !== false);
+        const qData = EXAM_DB.find(d => d.id === AppState.activeQId);
+        if (!qData) return;
+        this.renderPassage(qData);
+        this.renderStem(qData);
+      },
+
+      renderImgChips(qData, mode, boxId) {
+        const box = document.getElementById(boxId);
+        if (!box) return;
+        if (mode !== "image") {
+          box.style.display = "none";
+          box.innerHTML = "";
+          return;
+        }
+        const marked = new Set(this.getMarkList(qData));
+        const rest = this.getWordEntries(qData).filter(e => !marked.has(e.word));
+        if (!rest.length) {
+          box.style.display = "none";
+          box.innerHTML = "";
+          return;
+        }
+        box.style.display = "flex";
+        box.innerHTML = '<span class="img-kw-label">關鍵詞</span>'
+          + rest.map(e => `<button type="button" class="kw-chip" data-word="${this.esc(e.word)}">${this.esc(e.word)}</button>`).join("");
+      },
+
+      markHTML(text, marks) {
+        const safe = this.esc(text);
+        const list = (marks && marks.list) ? marks.list : [];
+        const counts = (marks && marks.counts) ? marks.counts : {};
+        if (!list.length) return safe;
+
+        const escRe = ch => ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const SEP = "[\\s「」『』]*";
+        const norm = s => s.replace(/[\s「」『』]/g, "");
+        const pattern = list
+          .map(e => norm(e.anchor).split("").map(escRe).join(SEP))
+          .sort((a, b) => b.length - a.length)
+          .join("|");
+        const re = new RegExp(pattern, "g");
+
+        const entryMap = {};
+        list.forEach(e => {
+          const key = norm(e.anchor);
+          if (entryMap[key] === undefined) entryMap[key] = e;
+        });
+
+        return safe.replace(re, m => {
+          const e = entryMap[norm(m)];
+          if (!e) return m;
+          if ((counts[e.word] || 0) >= 2) return m;
+          counts[e.word] = (counts[e.word] || 0) + 1;
+          return `<mark class="ink-mark" data-word="${this.esc(e.word)}">${m}</mark>`;
+        });
+      },
+
+      showKwPop(el) {
+        const word = el.dataset.word;
+        const qData = EXAM_DB.find(d => d.id === AppState.activeQId);
+        if (!qData || !word) return;
+        const d = (typeof TRANSLATION_DB !== "undefined") ? TRANSLATION_DB[qData.id] : null;
+        if (!d) return;
+
+        let fn = "", body = "", extra = "", copyTip = "";
+        if (d.type === "classical") {
+          const g = (d.glossary || []).find(x => x.word === word);
+          if (!g) return;
+          fn = g.reading ? `讀音 ${g.reading}` : "";
+          body = g.mean || "";
+          extra = g.note || "";
+          if (d.copy && d.copy.marks) {
+            const ci = d.copy.marks.indexOf(word);
+            if (ci >= 0 && d.copy.writes && d.copy.writes[ci]) {
+              copyTip = `題本抄寫：圈「${word}」，上方寫「${d.copy.writes[ci]}」`;
+            }
+          }
+        } else {
+          const k = (d.keywords || []).find(x => x.word === word);
+          if (!k) return;
+          fn = k.fn || "";
+          body = k.why || "";
+        }
+
+        const pop = document.getElementById("kwPop");
+        document.getElementById("kwPopWord").textContent = word;
+        const fnEl = document.getElementById("kwPopFn");
+        fnEl.textContent = fn;
+        fnEl.style.display = fn ? "inline-block" : "none";
+        document.getElementById("kwPopBody").textContent = body;
+        const copyEl = document.getElementById("kwPopCopy");
+        copyEl.textContent = copyTip;
+        copyEl.style.display = copyTip ? "block" : "none";
+        const extraEl = document.getElementById("kwPopExtra");
+        extraEl.textContent = extra;
+        extraEl.style.display = extra ? "block" : "none";
+
+        document.querySelectorAll(".ink-mark.active, .kw-chip.active").forEach(m => m.classList.remove("active"));
+        el.classList.add("active");
+
+        pop.classList.add("show");
+        pop.setAttribute("aria-hidden", "false");
+
+        const r = el.getBoundingClientRect();
+        const pw = pop.offsetWidth;
+        const ph = pop.offsetHeight;
+        let left = r.left + r.width / 2 - pw / 2;
+        left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+        let top = r.top - ph - 10;
+        if (top < 8) top = r.bottom + 10;
+        if (top + ph > window.innerHeight - 8) top = Math.max(8, window.innerHeight - ph - 8);
+        pop.style.left = left + "px";
+        pop.style.top = top + "px";
+      },
+
+      hideKwPop() {
+        const pop = document.getElementById("kwPop");
+        if (!pop) return;
+        pop.classList.remove("show");
+        pop.setAttribute("aria-hidden", "true");
+        document.querySelectorAll(".ink-mark.active, .kw-chip.active").forEach(m => m.classList.remove("active"));
+      },
+
+      renderBlocks(blocks, marks) {
+        if (!blocks) return "";
+        return blocks.map(b => {
+          if (b.t === "p") {
+            const inner = (marks && marks.lines && marks.lines.length && marks.showTrans)
+              ? this.renderClassicalLines(b.v, b.tag, marks)
+              : this.markHTML(b.v, marks);
+            return `<p class="tx-p">${inner}</p>`;
+          }
+          if (b.t === "q") {
+            const tag = b.tag ? `<span class="tx-tag">${this.esc(b.tag)}</span>` : "";
+            const src = b.src ? `<div class="tx-src">${this.esc(b.src)}</div>` : "";
+            const inner = (marks && marks.lines && marks.lines.length && marks.showTrans)
+              ? this.renderClassicalLines(b.v, b.tag, marks)
+              : this.markHTML(b.v, marks);
+            return `<blockquote class="tx-q">${tag}${inner}${src}</blockquote>`;
+          }
+          if (b.t === "h") return `<h4 class="tx-h">${this.esc(b.v)}</h4>`;
+          if (b.t === "src") return `<div class="tx-src">${this.esc(b.v)}</div>`;
+          if (b.t === "ul") {
+            const items = b.items.map(i => `<li class="tx-li">${this.markHTML(i, marks)}</li>`).join("");
+            return `<ul class="tx-ul">${items}</ul>`;
+          }
+          if (b.t === "table") {
+            const title = b.title ? `<div class="tx-table-title">${this.esc(b.title)}</div>` : "";
+            const head = b.head
+              ? `<thead><tr>${b.head.map(h => `<th>${this.esc(h)}</th>`).join("")}</tr></thead>`
+              : "";
+            const rows = b.rows
+              .map(r => `<tr>${r.map(c => `<td>${this.markHTML(c, marks)}</td>`).join("")}</tr>`)
+              .join("");
+            return `<div class="tx-table-wrap">${title}<table class="tx-table">${head}<tbody>${rows}</tbody></table></div>`;
+          }
+          if (b.t === "img") {
+            const cap = b.cap ? `<figcaption>${this.esc(b.cap)}</figcaption>` : "";
+            return `<figure class="tx-img"><img src="${this.esc(b.v)}" alt="${this.esc(b.cap || "題目附圖")}">${cap}</figure>`;
+          }
+          if (b.t === "chat") {
+            const rows = b.rows.map(r =>
+              `<div class="tx-chat-row"><span class="tx-chat-who">${this.esc(r.who)}</span>`
+              + `<span class="tx-chat-bubble">${this.markHTML(r.v, marks)}</span></div>`
+            ).join("");
+            return `<div class="tx-chat">${rows}</div>`;
+          }
+          if (b.t === "cols") {
+            const cols = b.cols.map(c => `<div>${this.renderBlocks(c, marks)}</div>`).join("");
+            return `<div class="tx-cols">${cols}</div>`;
+          }
+          return "";
+        }).join("");
+      },
+
+      renderStem(qData) {
+        const t = (typeof TEXT_DB !== "undefined") ? TEXT_DB[qData.id] : null;
+        const stem = (t && t.stem && t.stem.length) ? t.stem : null;
+        const hasImage = !!qData.stem_img;
+
+        const sw = document.getElementById("stemModeSwitch");
+        const textView = document.getElementById("stemTextView");
+        const imgView = document.getElementById("stemImageView");
+
+        sw.style.display = stem ? "flex" : "none";
+        const mode = stem ? (AppState.stemMode || "text") : "image";
+
+        textView.style.display = (mode === "text" && stem) ? "block" : "none";
+        imgView.style.display = (mode === "image" || !stem) ? "block" : "none";
+        sw.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+
+        if (mode === "text" && stem) {
+          textView.innerHTML = this.renderBlocks(stem, this.makeMarks(qData));
+          const d = (typeof TRANSLATION_DB !== "undefined") ? TRANSLATION_DB[qData.id] : null;
+          if (d && d.extra) {
+            textView.innerHTML += `<div class="extra-hint">💡 ${this.esc(d.extra)}</div>`;
+          }
+        } else {
+          textView.innerHTML = "";
+        }
+        if (hasImage) document.getElementById("stemImg").src = qData.stem_img;
+
+        const lines = this.getClassicalLines(qData);
+        const canTrans = lines.length > 0 && !!stem && mode === "text"
+          && lines.some(l => this.blockText(stem).includes(l.src));
+        const tBtn = document.getElementById("stemTransToggle");
+        tBtn.style.display = canTrans ? "inline-flex" : "none";
+        tBtn.textContent = AppState.showTrans !== false ? "隱藏語譯" : "顯示語譯";
+        this.renderImgChips(qData, mode, "stemImgChips");
+      },
+
+      renderPassage(qData) {
+        const t = (typeof TEXT_DB !== "undefined") ? TEXT_DB[qData.id] : null;
+        const passage = t && t.passage;
+        const hasImage = !!qData.passage_img;
+        const card = document.getElementById("passageCard");
+
+        if (!passage && !hasImage) {
+          card.style.display = "none";
+          document.getElementById("passageTextView").innerHTML = "";
+          const chips = document.getElementById("passageImgChips");
+          chips.style.display = "none";
+          chips.innerHTML = "";
+          return;
+        }
+        card.style.display = "block";
+
+        const title = (passage && passage.title) || qData.passage_title || "【題組選文】";
+        document.getElementById("passageTitleText").textContent = title;
+
+        const sw = document.getElementById("passageModeSwitch");
+        const textView = document.getElementById("passageTextView");
+        const imgView = document.getElementById("passageImageView");
+
+        sw.style.display = passage ? "flex" : "none";
+        const mode = passage ? (AppState.stemMode || "text") : "image";
+
+        textView.style.display = (mode === "text" && passage) ? "block" : "none";
+        imgView.style.display = (mode === "image" || !passage) ? "block" : "none";
+        sw.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+
+        if (mode === "text" && passage) {
+          textView.innerHTML = this.renderBlocks(passage.blocks, this.makeMarks(qData));
+        } else {
+          textView.innerHTML = "";
+        }
+        if (hasImage) document.getElementById("passageImg").src = qData.passage_img;
+
+        const lines = this.getClassicalLines(qData);
+        const canTrans = lines.length > 0 && !!passage && mode === "text"
+          && lines.some(l => this.blockText(passage.blocks).includes(l.src));
+        const tBtn = document.getElementById("passageTransToggle");
+        tBtn.style.display = canTrans ? "inline-flex" : "none";
+        tBtn.textContent = AppState.showTrans !== false ? "隱藏語譯" : "顯示語譯";
+        this.renderImgChips(qData, mode, "passageImgChips");
+      },
+
+      setStemMode(mode) {
+        AppState.stemMode = mode;
+        const qData = EXAM_DB.find(d => d.id === AppState.activeQId);
+        if (!qData) return;
+        this.renderPassage(qData);
+        this.renderStem(qData);
+      },
+
+      renderOptions(qData) {
+        const container = document.getElementById("ansChoiceList");
+        container.innerHTML = "";
+        const feedback = document.getElementById("ansFeedback");
+        const ghostSec = document.getElementById("ghostSection");
+        const noteSec = document.getElementById("notebookSection");
+
+        const qRec = AppState.records[qData.id];
+        const answered = (qRec.ansSelected === qData.official_ans);
+        const marks = this.makeMarks(qData);
+
+        ["A", "B", "C", "D"].forEach(opt => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "full-option-btn" + (answered ? " readonly" : "");
+          if (answered && opt === qData.official_ans) {
+            btn.classList.add("selected-correct");
+          }
+
+          const badge = document.createElement("span");
+          badge.className = "opt-badge";
+          badge.textContent = opt;
+
+          const textSpan = document.createElement("span");
+          textSpan.style.flex = "1";
+          textSpan.innerHTML = this.markHTML(
+            qData.options[opt] || `（選項 ${opt}）`,
+            marks
+          );
+
+          if (answered) {
+            btn.tabIndex = -1;
+            btn.setAttribute("aria-disabled", "true");
+          } else {
+            btn.onclick = () => this.handleReviewAnswer(opt, btn);
+          }
+
+          btn.appendChild(badge);
+          btn.appendChild(textSpan);
+          container.appendChild(btn);
+        });
+
+        if (answered) {
+          feedback.classList.add("show");
+          let desc = qData.correct_desc || "此選項推論嚴密無誤。";
+          desc = desc.replace(new RegExp(`^\\s*\\(${qData.official_ans}\\)\\s*`), "");
+          document.getElementById("ansFeedbackText").textContent =
+            `正解 (${qData.official_ans})：${desc}`;
+          ghostSec.classList.add("show");
+          noteSec.classList.add("show");
+        } else {
+          feedback.classList.remove("show");
+          ghostSec.classList.remove("show");
+          noteSec.classList.remove("show");
+          document.getElementById("ghostCardsContainer").innerHTML = "";
+        }
+      },
+
+      handleReviewAnswer(opt, btnEl) {
+        const qData = EXAM_DB.find(d => d.id === AppState.activeQId);
+        if (!qData) return;
+        const qRec = AppState.records[qData.id];
+        if (qRec.ansSelected === qData.official_ans) return;
+
+        if (opt === qData.official_ans) {
+          qRec.ansSelected = opt;
+          this.renderOptions(qData);
+          this.renderAnalysis(qData);
+          this.renderNotebookTask(qData);
+          this.renderJumpInline();
+
+          const fb = document.getElementById("ansFeedback");
+          setTimeout(() => fb.scrollIntoView({ behavior: "smooth", block: "center" }), 120);
+          this.showToast("正解確認！詳解與題本硃批已解鎖。");
+        } else {
+          btnEl.classList.add("shaking");
+          this.showToast("再想一下，這不是正解。");
+          setTimeout(() => btnEl.classList.remove("shaking"), 450);
+        }
+      },
+
+      renderAnalysis(qData) {
+        const container = document.getElementById("ghostCardsContainer");
+        container.innerHTML = "";
+        const qRec = AppState.records[qData.id];
+
+        qData.ghosts.forEach(ghost => {
+          qRec.ghostsFound[ghost.opt] = true;
+
+          const card = document.createElement("div");
+          card.className = "ghost-card";
+
+          const header = document.createElement("div");
+          header.className = "ghost-header";
+
+          const title = document.createElement("div");
+          title.className = "ghost-opt-title";
+          title.textContent = `選項 (${ghost.opt})`;
+
+          const tag = document.createElement("span");
+          tag.className = "ghost-status-tag busted";
+          tag.textContent = `錯在：${ghost.trap_word}`;
+
+          header.appendChild(title);
+          header.appendChild(tag);
+          card.appendChild(header);
+
+          const tokenFlow = document.createElement("div");
+          tokenFlow.className = "token-flow";
+          ghost.tokens.forEach(tok => {
+            const tokSpan = document.createElement("span");
+            tokSpan.className = "word-token" + (tok.isTrap ? " busted-token" : "");
+            tokSpan.textContent = tok.text;
+            tokenFlow.appendChild(tokSpan);
+          });
+          card.appendChild(tokenFlow);
+
+          const revealBox = document.createElement("div");
+          revealBox.className = "trap-reveal show";
+          revealBox.innerHTML = `
+            <div><strong>【為什麼錯】</strong>${this.esc(ghost.explain)}</div>
+            <div style="margin-top:4px;"><strong>【正確說法】</strong>${this.esc(ghost.correction)}</div>
+          `;
+          card.appendChild(revealBox);
+
+          container.appendChild(card);
+        });
+      },
+
+      renderDrillSource(qid, boxId) {
+        const box = document.getElementById(boxId);
+        if (!box) return;
+        const d = (typeof DRILL_DB !== "undefined") ? DRILL_DB[qid] : null;
+        if (!d) {
+          box.style.display = "none";
+          box.innerHTML = "";
+          return;
+        }
+
+        let html = "";
+
+        if (d.imageFrom) {
+          const q = EXAM_DB.find(x => x.id === d.imageFrom);
+          const src = q && (q.stem_img || q.passage_img);
+          if (src) {
+            html += `<figure class="drill-figure"><img src="${this.esc(src)}" alt="類題圖表"><figcaption>題目圖表</figcaption></figure>`;
+          }
+        }
+
+        if (d.textFrom) {
+          const t = (typeof TEXT_DB !== "undefined") ? TEXT_DB[d.textFrom] : null;
+          if (t) {
+            let blocks = t.passage ? t.passage.blocks : t.stem;
+            if (!t.passage && blocks && blocks.length) {
+              const last = blocks[blocks.length - 1];
+              if (last && last.t === "p" && /下列|根據|關於|何者/.test(last.v || "")) {
+                blocks = blocks.slice(0, -1);
+              }
+            }
+            if (blocks && blocks.length) {
+              const title = (t.passage && t.passage.title)
+                ? `<div class="drill-passage-title">${this.esc(t.passage.title)}</div>`
+                : "";
+              const body = this.renderBlocks(blocks, { list: [], counts: {}, lines: [], showTrans: false });
+              html += `<div class="drill-passage">${title}${body}</div>`;
+            }
+          }
+        }
+
+        box.innerHTML = html;
+        box.style.display = html ? "block" : "none";
+      },
+
+      startDrills() {
+        const unstamped = AppState.selectedQIds.filter(
+          id => !(AppState.records[id] && AppState.records[id].stamped)
+        );
+        if (unstamped.length) {
+          this.showToast(`還有 ${unstamped.length} 題尚未蓋章，先完成再進類題。`);
+          this.jumpTo(unstamped[0]);
+          return;
+        }
+
+        const queue = AppState.selectedQIds.filter(
+          id => (typeof DRILL_DB !== "undefined") && DRILL_DB[id]
+        );
+        if (!queue.length) {
+          this.finishInvestigation();
+          return;
+        }
+
+        AppState.drillQueue = queue;
+        AppState.drillIndex = 0;
+
+        const stamped = AppState.selectedQIds.filter(
+          id => AppState.records[id] && AppState.records[id].stamped
+        ).length;
+        document.getElementById("introStampCount").textContent = stamped;
+        document.getElementById("introDrillCount").textContent = queue.length;
+        this.showView("viewDrillIntro");
+      },
+
+      beginDrillMode() {
+        this.showView("viewDrills");
+        this.renderModeDrill();
+      },
+
+      backToReview() {
+        this.showView("viewInvestigate");
+        this.renderCurrentQuestion();
+      },
+
+      renderModeDrill() {
+        const queue = AppState.drillQueue;
+        const qid = queue[AppState.drillIndex];
+        const d = DRILL_DB[qid];
+        if (!d) return;
+
+        document.getElementById("modeDrillConcept").textContent = d.concept || "類題";
+        document.getElementById("modeDrillProgress").textContent =
+          `進度：${AppState.drillIndex + 1} / ${queue.length}`;
+        document.getElementById("modeDrillBadge").textContent = `第 ${qid} 題類題`;
+        document.getElementById("modeDrillSource").textContent = d.source || "";
+        this.renderDrillSource(qid, "modeDrillSourceBox");
+        document.getElementById("modeDrillStem").textContent = d.stem || "";
+
+        const box = document.getElementById("modeDrillOptions");
+        box.innerHTML = "";
+        const prev = AppState.drillResults[qid];
+
+        ["A", "B", "C", "D"].forEach(opt => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "drill-option";
+          btn.dataset.opt = opt;
+          btn.innerHTML = `<span class="drill-letter">${opt}</span>`
+            + `<span class="drill-opt-text">${this.esc(d.options[opt] || "")}</span>`;
+          btn.onclick = () => this.answerModeDrill(opt);
+
+          if (prev) {
+            btn.disabled = true;
+            if (opt === d.answer) btn.classList.add("is-correct");
+            if (opt === prev && prev !== d.answer) btn.classList.add("is-wrong");
+          }
+          box.appendChild(btn);
+        });
+
+        if (prev) {
+          this.renderDrillFeedback(d, prev, "modeDrillFeedback");
+        } else {
+          const fb = document.getElementById("modeDrillFeedback");
+          fb.className = "drill-feedback";
+          fb.innerHTML = "";
+        }
+
+        document.getElementById("modeDrillPrev").disabled = (AppState.drillIndex === 0);
+        document.getElementById("modeDrillNext").textContent =
+          (AppState.drillIndex === queue.length - 1) ? "完成，產出戰報 ➔" : "下一題 ➔";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      },
+
+      answerModeDrill(opt) {
+        const qid = AppState.drillQueue[AppState.drillIndex];
+        if (AppState.drillResults[qid]) return;
+        const d = DRILL_DB[qid];
+        AppState.drillResults[qid] = opt;
+
+        document.getElementById("modeDrillOptions").querySelectorAll(".drill-option").forEach(btn => {
+          btn.disabled = true;
+          if (btn.dataset.opt === d.answer) btn.classList.add("is-correct");
+          if (btn.dataset.opt === opt && opt !== d.answer) btn.classList.add("is-wrong");
+        });
+
+        this.renderDrillFeedback(d, opt, "modeDrillFeedback");
+      },
+
+      renderDrillFeedback(d, opt, fbId) {
+        const fb = document.getElementById(fbId || "modeDrillFeedback");
+        const correct = opt === d.answer;
+        fb.className = "drill-feedback show " + (correct ? "correct" : "wrong");
+
+        let html = `<div class="drill-result">${correct ? "答對了，觀念遷移成功。" : `再想一下，正解是 (${d.answer})。`}</div>`;
+        html += `<div class="drill-explain"><strong>【正解】</strong>${this.esc(d.explain.correct)}</div>`;
+        if (!correct) {
+          html += `<div class="drill-explain"><strong>【你選的選項】</strong>${this.esc(d.explain[opt] || "")}</div>`;
+        }
+        fb.innerHTML = html;
+      },
+
+      prevDrill() {
+        if (AppState.drillIndex > 0) {
+          AppState.drillIndex--;
+          this.renderModeDrill();
+        }
+      },
+
+      nextDrill() {
+        const qid = AppState.drillQueue[AppState.drillIndex];
+        if (!AppState.drillResults[qid]) {
+          this.showToast("請先作答，或按『跳過這題』。");
+          return;
+        }
+        if (AppState.drillIndex < AppState.drillQueue.length - 1) {
+          AppState.drillIndex++;
+          this.renderModeDrill();
+        } else {
+          this.finishInvestigation();
+        }
+      },
+
+      skipDrill() {
+        const qid = AppState.drillQueue[AppState.drillIndex];
+        if (!AppState.drillResults[qid]) {
+          AppState.drillSkipped[qid] = true;
+        }
+        if (AppState.drillIndex < AppState.drillQueue.length - 1) {
+          AppState.drillIndex++;
+          this.renderModeDrill();
+        } else {
+          this.finishInvestigation();
+        }
+      },
+
+      renderJumpInline() {
+        const box = document.getElementById("jumpInline");
+        if (!box) return;
+        box.innerHTML = "";
+
+        const all = document.createElement("button");
+        all.type = "button";
+        all.className = "jump-chip all";
+        all.textContent = "全部";
+        all.title = "打開完整題號表";
+        all.onclick = () => this.openJump();
+        box.appendChild(all);
+
+        AppState.selectedQIds.forEach(id => {
+          const rec = AppState.records[id];
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "jump-chip";
+          if (rec && rec.stamped) btn.classList.add("done");
+          if (id === AppState.activeQId) btn.classList.add("current");
+          btn.textContent = id;
+          btn.onclick = () => this.jumpTo(id);
+          box.appendChild(btn);
+        });
+
+        const cur = box.querySelector(".jump-chip.current");
+        if (cur) {
+          box.scrollLeft = Math.max(0, cur.offsetLeft - box.clientWidth / 2 + cur.clientWidth / 2);
+        }
+      },
+
+      openJump() {
+        const grid = document.getElementById("jumpGrid");
+        grid.innerHTML = "";        AppState.selectedQIds.forEach(id => {
+          const rec = AppState.records[id];
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "jump-item";
+          if (id === AppState.activeQId) btn.classList.add("current");
+          else if (rec && rec.stamped) btn.classList.add("done");
+          else btn.classList.add("todo");
+          btn.textContent = id;
+          btn.title = (rec && rec.stamped) ? "已蓋章" : "未完成";
+          btn.onclick = () => this.jumpTo(id);
+          grid.appendChild(btn);
+        });
+        document.getElementById("jumpOverlay").classList.add("show");
+        document.body.style.overflow = "hidden";
+      },
+
+      closeJump(e) {
+        if (e && e.target && e.target.id !== "jumpOverlay") return;
+        document.getElementById("jumpOverlay").classList.remove("show");
+        document.body.style.overflow = "";
+      },
+
+      jumpTo(id) {
+        clearTimeout(this._advanceTimer);
+        const idx = AppState.selectedQIds.indexOf(id);
+        if (idx < 0) return;
+        AppState.currentIndex = idx;
+        this.renderCurrentQuestion();
+        this.closeJump();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      },
+
+      openPractice() {
+        const sel = document.getElementById("practiceConcept");
+        if (sel.options.length <= 1) {
+          const concepts = [...new Set(Object.values(DRILL_DB).map(d => d.concept))]
+            .sort((a, b) => a.localeCompare(b, "zh-Hant"));
+          concepts.forEach(c => {
+            const o = document.createElement("option");
+            o.value = c;
+            o.textContent = c;
+            sel.appendChild(o);
+          });
+        }
+        this.showView("viewPractice");
+        this.showPracticeList();
+      },
+
+      showPracticeList() {
+        document.getElementById("practiceListView").style.display = "block";
+        document.getElementById("practiceDrillView").style.display = "none";
+        this.renderPracticeList();
+      },
+
+      renderPracticeList() {
+        const sel = document.getElementById("practiceConcept");
+        const filter = sel.value;
+        const grid = document.getElementById("practiceGrid");
+        grid.innerHTML = "";
+
+        Object.keys(DRILL_DB).map(Number).sort((a, b) => a - b)
+          .filter(id => !filter || DRILL_DB[id].concept === filter)
+          .forEach(id => {
+            const d = DRILL_DB[id];
+            const res = AppState.practiceResults[id];
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "practice-item";
+            if (res === d.answer) btn.classList.add("correct");
+            else if (res) btn.classList.add("wrong");
+
+            const status = res === d.answer ? "已答對" : (res ? "再練一次" : "未練習");
+            btn.innerHTML = `<span class="pi-q">第 ${id} 題</span>`
+              + `<span class="pi-c">${this.esc(d.concept)}</span>`
+              + `<span class="pi-s">${status}</span>`;
+            btn.onclick = () => this.openPracticeDrill(id);
+            grid.appendChild(btn);
+          });
+
+        if (!grid.children.length) {
+          grid.innerHTML = '<p style="font-size:0.86rem;color:var(--ink-muted);">這個能力點目前沒有類題。</p>';
+        }
+      },
+
+      openPracticeDrill(qid) {
+        const d = DRILL_DB[qid];
+        if (!d) return;
+        AppState.practiceQid = qid;
+
+        document.getElementById("practiceListView").style.display = "none";
+        document.getElementById("practiceDrillView").style.display = "block";
+        document.getElementById("practiceConceptBadge").textContent = d.concept;
+        document.getElementById("practiceSource").textContent = d.source || "";
+        this.renderDrillSource(qid, "practiceSourceBox");
+        document.getElementById("practiceStem").textContent = d.stem;
+
+        const box = document.getElementById("practiceOptions");
+        box.innerHTML = "";
+        const prev = AppState.practiceResults[qid];
+
+        ["A", "B", "C", "D"].forEach(opt => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "drill-option";
+          btn.dataset.opt = opt;
+          btn.innerHTML = `<span class="drill-letter">${opt}</span>`
+            + `<span class="drill-opt-text">${this.esc(d.options[opt] || "")}</span>`;
+          btn.onclick = () => this.answerPractice(qid, opt);
+
+          if (prev) {
+            btn.disabled = true;
+            if (opt === d.answer) btn.classList.add("is-correct");
+            if (opt === prev && prev !== d.answer) btn.classList.add("is-wrong");
+          }
+          box.appendChild(btn);
+        });
+
+        if (prev) {
+          this.renderPracticeFeedback(qid, prev);
+        } else {
+          const fb = document.getElementById("practiceFeedback");
+          fb.className = "drill-feedback";
+          fb.innerHTML = "";
+        }
+      },
+
+      answerPractice(qid, opt) {
+        if (AppState.practiceResults[qid]) return;
+        AppState.practiceResults[qid] = opt;
+        const d = DRILL_DB[qid];
+        const box = document.getElementById("practiceOptions");
+        box.querySelectorAll(".drill-option").forEach(btn => {
+          btn.disabled = true;
+          if (btn.dataset.opt === d.answer) btn.classList.add("is-correct");
+          if (btn.dataset.opt === opt && opt !== d.answer) btn.classList.add("is-wrong");
+        });
+        this.renderPracticeFeedback(qid, opt);
+      },
+
+      renderPracticeFeedback(qid, opt) {
+        const d = DRILL_DB[qid];
+        const fb = document.getElementById("practiceFeedback");
+        const correct = opt === d.answer;
+        fb.className = "drill-feedback show " + (correct ? "correct" : "wrong");
+
+        let html = `<div class="drill-result">${correct ? "答對了，觀念遷移成功。" : `再想一下，正解是 (${d.answer})。`}</div>`;
+        html += `<div class="drill-explain"><strong>【正解】</strong>${this.esc(d.explain.correct)}</div>`;
+        if (!correct) {
+          html += `<div class="drill-explain"><strong>【你選的選項】</strong>${this.esc(d.explain[opt] || "")}</div>`;
+        }
+        fb.innerHTML = html;
+      },
+
+      randomPractice() {
+        const sel = document.getElementById("practiceConcept");
+        const filter = sel.value;
+        const pool = Object.keys(DRILL_DB).map(Number)
+          .filter(id => !filter || DRILL_DB[id].concept === filter);
+        if (!pool.length) return;
+
+        const fresh = pool.filter(id => !AppState.practiceResults[id] && id !== AppState.practiceQid);
+        const rest = pool.filter(id => id !== AppState.practiceQid);
+        const pickFrom = fresh.length ? fresh : (rest.length ? rest : pool);
+        const pick = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+        this.openPracticeDrill(pick);
+      },
+
+      renderNotebookTask(qData) {
+        const qRec = AppState.records[qData.id];
+        const nTask = qData.notebook_task;
+        document.getElementById("notebookStepNum").textContent = "2";
+        document.getElementById("notebookStepText").textContent =
+          "第二步：實體題本紅筆硃批核驗・單鍵蓋章結案";
+        document.getElementById("goldInstruction").textContent = 
+          nTask.instruction || `請在實體題本第 ${qData.id} 題空白處，用紅筆抄寫以下破案金句：`;
+        document.getElementById("goldText").textContent = nTask.gold_note || `第 ${qData.id} 題 正解 (${qData.official_ans}) 核心破案`;
+
+        const stampBtn = document.getElementById("stampActionBtn");
+        const stampInd = document.getElementById("stampedIndicator");
+
+        if (qRec.stamped) {
+          stampBtn.style.display = "none";
+          stampInd.classList.add("show");
+        } else {
+          stampBtn.style.display = "flex";
+          stampInd.classList.remove("show");
+          stampBtn.disabled = false;
+          document.getElementById("stampBtnText").textContent =
+            "我已在實體題本完成紅筆硃批・點此蓋章結案！";
+        }
+      },
+
+      stampAndFinish() {
+        const qId = AppState.activeQId;
+        const qRec = AppState.records[qId];
+        if (document.getElementById("stampActionBtn").disabled) return;
+        qRec.stamped = true;
+        this.renderJumpInline();
+
+        document.getElementById("stampActionBtn").style.display = "none";
+        const ind = document.getElementById("stampedIndicator");
+        ind.classList.add("show");
+
+        this.showToast("硃批已錄！實體題本蓋章結案！");
+
+        // 自動停留1秒後跳下一題
+        clearTimeout(this._advanceTimer);
+        this._advanceTimer = setTimeout(() => {
+          if (AppState.currentIndex < AppState.selectedQIds.length - 1) {
+            this.nextQuestion();
+          } else {
+            this.startDrills();
+          }
+        }, 900);
+      },
+
+      prevQuestion() {
+        clearTimeout(this._advanceTimer);
+        if (AppState.currentIndex > 0) {
+          AppState.currentIndex--;
+          this.renderCurrentQuestion();
+        }
+      },
+
+      nextQuestion() {
+        clearTimeout(this._advanceTimer);
+        if (AppState.currentIndex < AppState.selectedQIds.length - 1) {
+          AppState.currentIndex++;
+          this.renderCurrentQuestion();
+        } else {
+          this.startDrills();
+        }
+      },
+
+      finishInvestigation() {
+        clearTimeout(this._advanceTimer);
+        this.renderReport();
+        this.showView("viewReport");
+      },
+
+      renderReport() {
+        const name = AppState.studentName;
+        const seat = AppState.studentSeat;
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("reportStudentMeta").textContent = `考生：${name}（座號 ${seat}） ｜ 完成訂正日期：${today}`;
+
+        let completed = 0;
+        let bustedCount = 0;
+        const list = document.getElementById("reportRecordsList");
+        list.innerHTML = "";
+
+        AppState.selectedQIds.forEach(id => {
+          const qData = EXAM_DB.find(d => d.id === id);
+          const qRec = AppState.records[id];
+          if (qRec && qRec.stamped) {
+            completed++;
+          }
+          if (qRec && qRec.ghostsFound) {
+            bustedCount += Object.keys(qRec.ghostsFound).length;
+          }
+
+          const row = document.createElement("div");
+          row.className = "record-row";
+
+          const qSpan = document.createElement("span");
+          qSpan.className = "rec-q";
+          qSpan.textContent = `第 ${id} 題`;
+
+          const ansSpan = document.createElement("span");
+          ansSpan.className = "rec-ans";
+          ansSpan.textContent = `(${qData.official_ans})`;
+
+          const noteSpan = document.createElement("span");
+          noteSpan.className = "rec-note";
+          noteSpan.textContent = qData.notebook_task.gold_note || "紅筆金句已登記於題本";
+
+          row.appendChild(qSpan);
+          row.appendChild(ansSpan);
+          row.appendChild(noteSpan);
+          list.appendChild(row);
+        });
+
+        document.getElementById("statCompletedCount").textContent = completed;
+        document.getElementById("statBustedGhosts").textContent = bustedCount;
+
+        const drillIds = AppState.selectedQIds.filter(
+          id => (typeof DRILL_DB !== "undefined") && DRILL_DB[id]
+        );
+        const drillDone = drillIds.filter(id => AppState.drillResults[id]).length;
+        const drillCorrect = drillIds.filter(
+          id => AppState.drillResults[id] === DRILL_DB[id].answer
+        ).length;
+        const drillSkipped = drillIds.filter(id => AppState.drillSkipped[id]).length;
+        document.getElementById("reportDrillSummary").textContent = drillIds.length
+          ? `類題：完成 ${drillDone} / ${drillIds.length} 題，答對 ${drillCorrect} 題${drillSkipped ? `，跳過 ${drillSkipped} 題` : ""}。`
+          : "";
+      },
+
+      copyReportText() {
+        const name = AppState.studentName;
+        const seat = AppState.studentSeat;
+        const today = new Date().toISOString().split("T")[0];
+
+        let text = `【會考國文模擬考・錯題偵探平反戰報】\n考生：${name}（座號 ${seat}）\n訂正完成日期：${today}\n`;
+        text += `平反錯題數：${AppState.selectedQIds.length} 題\n\n`;
+
+        AppState.selectedQIds.forEach(id => {
+          const qData = EXAM_DB.find(d => d.id === id);
+          text += `第 ${id} 題 [正解 ${qData.official_ans}] 硃批金句：${qData.notebook_task.gold_note}\n`;
+        });
+
+        navigator.clipboard.writeText(text).then(() => {
+          this.showToast("戰報已複製至剪貼簿！可直接貼在 Google Classroom 或繳交。");
+        }).catch(() => {
+          this.showToast("複製失敗，請手動複製文字區。");
+        });
+      },
+
+      restart() {
+        this.showView("viewSetup");
+      },
+
+      zoomStem() {
+        const qId = AppState.activeQId;
+        const qData = EXAM_DB.find(d => d.id === qId);
+        if (qData) {
+          this.openZoom(qData.stem_img);
+        }
+      },
+
+      zoomPassage() {
+        const qId = AppState.activeQId;
+        const qData = EXAM_DB.find(d => d.id === qId);
+        if (qData && qData.passage_img) {
+          this.openZoom(qData.passage_img);
+        }
+      },
+
+      openZoom(src) {
+        document.getElementById("modalImg").src = src;
+        document.getElementById("imageModal").classList.add("active");
+      },
+
+      closeZoom(e) {
+        document.getElementById("imageModal").classList.remove("active");
+      },
+
+      loadLocalCache() {
+        // 保留擴充
+      }
+    };
+
+    window.addEventListener("DOMContentLoaded", () => {
+      App.init();
+    });
+  </script>
+</body>
+</html>
