@@ -2573,7 +2573,7 @@
       <div class="case-file-form">
         <div class="form-item">
           <label for="studentClass">班級</label>
-          <input type="text" id="studentClass" placeholder="例：903" value="">
+          <input type="text" id="studentClass" placeholder="請打 904" value="">
         </div>
         <div class="form-item">
           <label for="studentSeat">座號（選填）</label>
@@ -3184,7 +3184,7 @@
         const classInput = document.getElementById("studentClass").value.trim();
         const seatInput = document.getElementById("studentSeat").value.trim();
         if (!classInput) {
-          this.showToast("請先填入班級，例如 903，老師才看得到班級統計。");
+          this.showToast("請先填入班級，例如 904，老師才看得到班級統計。");
           return;
         }
         AppState.studentClass = classInput;
