@@ -138,7 +138,9 @@ flowchart TD
 
 ---
 
-## 六、 檔案開啟方式
+## 六、 檔案開啟方式與課堂投影
 
 - **互動程式路徑**：`100_Todo/projects/vibe-coding/exam-detective/index.html`
+- **線上發布網址**：`https://sshorng.github.io/exam-detective/`
+- **課堂投影掃碼**：頂部導覽列設有「📱 投影學生 QR Code」按鈕。老師投影於教室大螢幕時，點擊即可開啟高對比、大尺寸的學生掃碼登入彈窗，無論本機或線上開啟皆能智慧引導學生連線；支援一鍵複製網址與按 Esc 關閉。
 - **使用方式**：滑鼠點兩下直接在 Chrome、Edge 或平板瀏覽器中全螢幕開啟，離線亦可正常運作。
