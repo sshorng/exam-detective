@@ -1405,6 +1405,41 @@
       cursor: pointer;
     }
 
+    .teacher-quicklist button span {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .teacher-dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      font-family: var(--font-sans);
+      font-size: 0.66rem;
+      font-weight: 700;
+      font-style: normal;
+      line-height: 1;
+      color: #FFFFFF;
+      background: var(--amber-border);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .teacher-dot[data-level="2"] {
+      background: #C97B3F;
+    }
+
+    .teacher-dot[data-level="3"] {
+      background: var(--seal-red);
+    }
+
+    .teacher-quicklist button.on .teacher-dot {
+      background: #FFFFFF;
+      color: var(--seal-red);
+    }
+
     .teacher-quicklist button.on {
       background: var(--seal-red);
       border-color: var(--seal-red);
@@ -5695,20 +5730,49 @@
         holder.appendChild(link);
       },
 
+      teacherDotLevel(count, max) {
+        if (!count) return 0;
+        if (!max) return 1;
+        const ratio = count / max;
+        if (ratio >= 0.67) return 3;
+        if (ratio >= 0.34) return 2;
+        return 1;
+      },
+
       renderTeacherQuickList() {
         const holder = document.getElementById("teacherQuickList");
         if (!holder) return;
         holder.innerHTML = "";
-        const ranked = this.ranking().filter((row) => row.count > 0);
+        const ranking = this.ranking();
+        const counts = {};
+        let max = 0;
+        ranking.forEach((row) => {
+          counts[row.qid] = row.count;
+          if (row.count > max) max = row.count;
+        });
+        const ranked = ranking.filter((row) => row.count > 0);
         const list = ranked.length
           ? ranked.map((row) => row.qid)
           : EXAM_DB.map((item) => item.id);
         list.forEach((qid) => {
+          const count = counts[qid] || 0;
           const button = document.createElement("button");
           button.type = "button";
-          button.textContent = qid;
-          button.title = "跳到第 " + qid + " 題";
-          if (Number(AppState.activeQId) === Number(qid)) button.className = "on";
+          button.title = count
+            ? "第 " + qid + " 題・" + count + " 人回報"
+            : "第 " + qid + " 題・尚無回報";
+          const label = document.createElement("span");
+          label.textContent = qid;
+          button.appendChild(label);
+          const level = this.teacherDotLevel(count, max);
+          if (level) {
+            const dot = document.createElement("i");
+            dot.className = "teacher-dot";
+            dot.dataset.level = String(level);
+            dot.textContent = count;
+            button.appendChild(dot);
+          }
+          if (Number(AppState.activeQId) === Number(qid)) button.classList.add("on");
           button.addEventListener("click", () => this.jumpToQuestion(qid));
           holder.appendChild(button);
         });
