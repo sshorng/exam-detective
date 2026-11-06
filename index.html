@@ -3375,6 +3375,12 @@
         if (banner) banner.style.display = on ? "flex" : "none";
         if (footer) footer.style.display = on ? "none" : "";
         if (on && App.Hotspot && App.Hotspot.renderTeacherQuickList) App.Hotspot.renderTeacherQuickList();
+        const stampLabel = document.getElementById("stampBtnText");
+        if (stampLabel) {
+          stampLabel.textContent = on
+            ? "檢討完畢"
+            : "我已在實體題本完成紅筆硃批・點此蓋章結案！";
+        }
         const chip = document.getElementById("teacherModeChip");
         const signedIn = Boolean(AppState.teacherSession);
         if (chip) chip.classList.toggle("on", on || signedIn);
@@ -4357,12 +4363,21 @@
           stampBtn.style.display = "flex";
           stampInd.classList.remove("show");
           stampBtn.disabled = false;
-          document.getElementById("stampBtnText").textContent =
-            "我已在實體題本完成紅筆硃批・點此蓋章結案！";
+          document.getElementById("stampBtnText").textContent = AppState.teacherMode
+            ? "檢討完畢"
+            : "我已在實體題本完成紅筆硃批・點此蓋章結案！";
         }
       },
 
       stampAndFinish() {
+        if (AppState.teacherMode) {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setTimeout(() => {
+            if (window.scrollY > 0) window.scrollTo(0, 0);
+          }, 450);
+          this.showToast("檢討完畢，已回到頁首。");
+          return;
+        }
         const qId = AppState.activeQId;
         const qRec = AppState.records[qId];
         if (document.getElementById("stampActionBtn").disabled) return;
