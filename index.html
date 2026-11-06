@@ -1316,6 +1316,24 @@
     }
 
     /* 導覽切換列 */
+    .teacher-mode-chip {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #F7EAD4;
+      background: rgba(185, 56, 44, 0.92);
+      border: 1px solid rgba(232, 202, 157, 0.6);
+      border-radius: 999px;
+    }
+
+    .teacher-mode-chip.on {
+      display: inline-flex;
+    }
+
     .teacher-mode-banner {
       display: none;
       align-items: center;
@@ -2562,6 +2580,7 @@
       </div>
     </div>
     <div class="desk-actions">
+      <span class="teacher-mode-chip" id="teacherModeChip">教師模式</span>
       <button type="button" class="btn-qr-project" onclick="App.Hotspot.openTeacher()" title="教師專用：錯題熱點統計（需密碼）">
         <svg class="qr-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 20V10M10 20V4M16 20v-7M22 20v-4"></path>
@@ -3249,6 +3268,8 @@
         if (footer) footer.style.display = on ? "none" : "";
         const qid = document.getElementById("teacherModeQid");
         if (qid) qid.textContent = on ? "第 " + (AppState.activeQId || 0) + " 題" : "";
+        const chip = document.getElementById("teacherModeChip");
+        if (chip) chip.classList.toggle("on", on);
         const stepText = document.querySelector("#viewInvestigate .step-banner span:last-child");
         if (stepText) {
           stepText.textContent = on
@@ -3262,6 +3283,7 @@
         document.getElementById(viewId).classList.add("active");
         window.scrollTo({ top: 0, behavior: "smooth" });
         if (App.Ink) App.Ink.syncContext();
+        this.applyTeacherMode();
       },
 
       showSetup() {
