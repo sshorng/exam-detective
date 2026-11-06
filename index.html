@@ -2275,9 +2275,10 @@
     /* 教師檢討畫筆：全螢幕畫布與浮動工具列（隱藏入口，筆跡只存本機） */
     .ink-layer {
       position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
       z-index: 480;
       display: none;
       touch-action: none;
@@ -2286,6 +2287,10 @@
 
     .ink-layer.active {
       display: block;
+    }
+
+    .ink-layer.panning {
+      cursor: grabbing;
     }
 
     .ink-layer.passthrough {
@@ -5105,6 +5110,12 @@
       saveTimer: null,
       watchTimer: null,
       dpr: 1,
+      rect: null,
+      scaleX: 1,
+      scaleY: 1,
+      touchPoints: null,
+      panning: false,
+      panLast: null,
 
       init() {
         this.canvas = document.getElementById("teacherInkLayer");
@@ -5116,8 +5127,12 @@
         this.bindCanvas();
         this.bindEntry();
         this.bindKeys();
-        window.addEventListener("scroll", () => this.scheduleRender(), { passive: true });
-        window.addEventListener("resize", () => this.scheduleRender());
+        window.addEventListener("scroll", () => this.invalidateRect(), { passive: true });
+        window.addEventListener("resize", () => this.invalidateRect());
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("scroll", () => this.invalidateRect(), { passive: true });
+          window.visualViewport.addEventListener("resize", () => this.invalidateRect());
+        }
         window.addEventListener("pagehide", () => this.persistNow());
         document.addEventListener("visibilitychange", () => {
           if (document.visibilityState === "hidden") this.persistNow();
@@ -5192,7 +5207,10 @@
         this.stroke = null;
         this.pointerId = null;
         this.erasing = false;
-        this.canvas.classList.remove("active", "passthrough");
+        this.panning = false;
+        this.panLast = null;
+        this.touchPoints = null;
+        this.canvas.classList.remove("active", "passthrough", "panning");
         this.palette.classList.remove("active");
         clearInterval(this.watchTimer);
         this.watchTimer = null;
@@ -5302,6 +5320,28 @@
         if (this.history.length > this.MAX_UNDO) this.history.shift();
       },
 
+      // 畫布方框快取：平板縮放或瀏覽器工具列收合時，innerWidth 與實際顯示區域會不一致，
+      // 一律以 getBoundingClientRect 量到的方框為準，寫字座標才不會偏。
+      invalidateRect() {
+        this.rect = null;
+        this.scheduleRender();
+      },
+
+      refreshRect() {
+        if (!this.canvas) return null;
+        const rect = this.canvas.getBoundingClientRect();
+        this.rect = {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width || window.innerWidth,
+          height: rect.height || window.innerHeight
+        };
+        return this.rect;
+      },
+
+      measureRect() {
+        return this.rect || this.refreshRect() || { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+      },
       // --- 書寫 ---------------------------------------------------------------
       bindCanvas() {
         this.canvas.addEventListener("pointerdown", (event) => this.onPointerDown(event), { passive: false });
@@ -5314,19 +5354,95 @@
 
       pointOf(event) {
         const raw = event && typeof event.pressure === "number" && event.pressure > 0 ? event.pressure : 0.5;
+        const rect = this.measureRect();
         return {
-          x: (event ? event.clientX : 0) + window.scrollX,
-          y: (event ? event.clientY : 0) + window.scrollY,
+          x: (event ? event.clientX : 0) - rect.left + window.scrollX,
+          y: (event ? event.clientY : 0) - rect.top + window.scrollY,
           p: event && event.pointerType === "pen" ? raw : 0.5
         };
       },
 
+
+      // --- 兩指拖曳：畫筆模式下仍可用兩指移動畫面 ----------------------------
+      touchMap() {
+        if (!this.touchPoints) this.touchPoints = new Map();
+        return this.touchPoints;
+      },
+
+      trackTouch(event) {
+        this.touchMap().set(event.pointerId, { x: event.clientX, y: event.clientY });
+      },
+
+      updateTouch(event) {
+        const map = this.touchMap();
+        if (!map.has(event.pointerId)) return;
+        map.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      },
+
+      dropTouch(event) {
+        if (event && event.pointerId !== undefined) this.touchMap().delete(event.pointerId);
+      },
+
+      touchPeek() {
+        return this.touchPoints ? this.touchPoints.size : 0;
+      },
+
+      touchCenter() {
+        const map = this.touchMap();
+        if (!map.size) return null;
+        let x = 0;
+        let y = 0;
+        map.forEach((point) => { x += point.x; y += point.y; });
+        return { x: x / map.size, y: y / map.size };
+      },
+
+      startPan() {
+        if (this.panning) return;
+        this.panning = true;
+        this.stroke = null;
+        this.erasing = false;
+        this.pointerId = null;
+        this.needsFullRender = true;
+        this.panLast = this.touchCenter();
+        this.canvas.classList.add("panning");
+        this.render();
+      },
+
+      panMove() {
+        if (!this.panning) return;
+        const center = this.touchCenter();
+        if (!center || !this.panLast) return;
+        const dx = center.x - this.panLast.x;
+        const dy = center.y - this.panLast.y;
+        this.panLast = center;
+        if (!dx && !dy) return;
+        window.scrollBy(-dx, -dy);
+      },
+
+      stopPan() {
+        if (!this.panning) return;
+        this.panning = false;
+        this.panLast = null;
+        this.pointerId = null;
+        this.touchPoints = null;
+        this.canvas.classList.remove("panning");
+        this.render();
+      },
       onPointerDown(event) {
         if (!this.active || this.passthrough) return;
+        if (event.pointerType === "touch") {
+          event.preventDefault();
+          this.trackTouch(event);
+          if (this.touchPeek() >= 2) {
+            this.startPan();
+            return;
+          }
+        }
         if (this.pointerId !== null) return;
         if (event.pointerType === "touch" && event.isPrimary === false) return;
         if (event.pointerType === "mouse" && event.button > 0) return;
         event.preventDefault();
+        this.refreshRect();
         this.syncContext();
         this.pointerId = event.pointerId;
         this.gestureChanged = false;
@@ -5351,6 +5467,15 @@
 
       onPointerMove(event) {
         if (!this.active || this.passthrough) return;
+        if (this.panning) {
+          event.preventDefault();
+          if (event.pointerType === "touch") {
+            this.updateTouch(event);
+            this.panMove();
+          }
+          return;
+        }
+        if (event.pointerType === "touch") this.updateTouch(event);
         if (this.pointerId === null || event.pointerId !== this.pointerId) return;
         event.preventDefault();
         const samples = typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [];
@@ -5370,6 +5495,11 @@
 
       onPointerUp(event) {
         if (!this.active) return;
+        if (event && event.pointerType === "touch") this.dropTouch(event);
+        if (this.panning) {
+          if (!event || this.touchPeek() < 2) this.stopPan();
+          return;
+        }
         if (this.pointerId === null) return;
         if (event && event.pointerId !== undefined && event.pointerId !== this.pointerId) return;
         this.endGesture(!event);
@@ -5460,22 +5590,31 @@
         const canvas = this.canvas;
         const ctx = this.ctx;
         if (!canvas || !ctx) return;
-        const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+        const rect = this.refreshRect() || { width: window.innerWidth, height: window.innerHeight };
+        const cssWidth = Math.max(1, rect.width);
+        const cssHeight = Math.max(1, rect.height);
+        let dpr = Math.max(1, window.devicePixelRatio || 1);
+        const maxPixels = 6e6;
+        if (cssWidth * cssHeight * dpr * dpr > maxPixels) {
+          dpr = Math.max(1, Math.sqrt(maxPixels / (cssWidth * cssHeight)));
+        }
+        dpr = Math.min(3, dpr);
         this.dpr = dpr;
-        const targetWidth = Math.max(1, Math.round(window.innerWidth * dpr));
-        const targetHeight = Math.max(1, Math.round(window.innerHeight * dpr));
+        const targetWidth = Math.max(1, Math.round(cssWidth * dpr));
+        const targetHeight = Math.max(1, Math.round(cssHeight * dpr));
         if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
           canvas.width = targetWidth;
           canvas.height = targetHeight;
         }
+        this.scaleX = canvas.width / cssWidth;
+        this.scaleY = canvas.height / cssHeight;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (!this.active) return;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.setTransform(this.scaleX, 0, 0, this.scaleY, 0, 0);
         ctx.translate(-window.scrollX, -window.scrollY);
         this.strokes.forEach((stroke) => this.drawStroke(ctx, stroke));
         if (this.stroke) this.drawStroke(ctx, this.stroke);
-        this.needsFullRender = false;
         this.needsFullRender = false;
       },
 
