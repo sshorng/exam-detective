@@ -1347,8 +1347,14 @@
       }
     }
 
-    .desk-title.ink-entry {
+    .teacher-mode-chip {
       cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .teacher-mode-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(185, 56, 44, 0.35);
     }
 
     .teacher-mode-chip {
@@ -2515,6 +2521,23 @@
       color: var(--ink-primary);
     }
 
+    .progress-head-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-klass {
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid var(--paper-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      font-size: 0.86rem;
+    }
+
     .progress-percent {
       font-family: var(--font-serif);
       font-size: 2.6rem;
@@ -3261,7 +3284,12 @@
             <h2 class="progress-title">訂正進度・墨龜賽跑</h2>
             <div class="progress-meta" id="progressMetaText">等待資料…</div>
           </div>
-          <div class="progress-percent" id="progressPercent">0%</div>
+          <div class="progress-head-right">
+            <select id="progressKlass" class="progress-klass" onchange="App.Hotspot.onBoardKlassChange(this.value)">
+              <option value="">全部班級</option>
+            </select>
+            <span class="progress-percent" id="progressPercent">0%</span>
+          </div>
         </div>
 
         <div class="progress-stage">
@@ -3539,6 +3567,17 @@
         });
         window.addEventListener("resize", () => this.hideKwPop());
         window.addEventListener("scroll", () => this.hideKwPop(), true);
+
+        // 點頁首標題回到首頁（題號清單）
+        const brand = document.querySelector(".desk-title");
+        if (brand) {
+          brand.style.cursor = "pointer";
+          brand.title = "回到首頁";
+          brand.addEventListener("click", () => {
+            if (App.Ink && App.Ink.active) App.Ink.disable();
+            this.showSetup();
+          });
+        }
       },
 
       showToast(msg) {
@@ -4976,12 +5015,13 @@
 
       // --- 入口：長按標題或鍵盤快捷 -------------------------------------------------
       bindEntry() {
-        const title = document.querySelector(".desk-title");
-        if (!title) return;
-        title.classList.add("ink-entry");
-        title.addEventListener("click", (event) => {
+        const chip = document.getElementById("teacherModeChip");
+        if (!chip) return;
+        chip.style.cursor = "pointer";
+        chip.title = "點一下開關畫筆工具列";
+        chip.addEventListener("click", (event) => {
+          event.stopPropagation();
           if (!AppState.teacherSession) return;
-          event.preventDefault();
           if (this.active) this.disable();
           else this.enable();
         });
@@ -5535,6 +5575,7 @@
       RETRY_TIMES: 2,
       AUTO_MS: 60000,
       BOARD_MS: 10000,
+      BOARD_KLASS_KEY: "exam-detective:progress:klass",
       SNAPSHOT_KEY: "exam-detective:hotspot:snapshot",
       AUTO_KEY: "exam-detective:hotspot:auto",
       DEDUPE_MS: 15000,
@@ -5662,6 +5703,8 @@
       },
 
       board: { percent: 0, done: 0, total: 0, students: [], started: 0, finished: 0, at: "" },
+      boardKlass: "",
+      klassList: [],
       boardTimer: null,
       boardBusy: false,
       lastMilestone: 0,
@@ -5700,6 +5743,11 @@
           this.openAuthModal();
           return;
         }
+        try {
+          this.boardKlass = window.localStorage.getItem(this.BOARD_KLASS_KEY) || "";
+        } catch (error) {
+          this.boardKlass = "";
+        }
         App.showView("viewProgress");
         this.fetchBoard();
         this.startBoardPoll();
@@ -5714,10 +5762,12 @@
             action: "board",
             token: this.token,
             examId: this.examId,
-            ver: this.qbVersion
+            ver: this.qbVersion,
+            klass: this.boardKlass
           };
           const result = silent ? await this.post(payload) : await this.postWithRetry(payload);
           if (result && result.ok) {
+            this.klassList = Array.isArray(result.klassList) ? result.klassList : [];
             this.board = {
               percent: Number(result.percent) || 0,
               done: Number(result.done) || 0,
@@ -5744,6 +5794,41 @@
 
       refreshBoard() {
         this.fetchBoard();
+      },
+
+      onBoardKlassChange(value) {
+        this.boardKlass = String(value || "");
+        try {
+          window.localStorage.setItem(this.BOARD_KLASS_KEY, this.boardKlass);
+        } catch (error) {}
+        this.lastMilestone = 0;
+        this.board = { percent: 0, done: 0, total: 0, students: [], started: 0, finished: 0, at: "" };
+        this.renderBoard();
+        this.fetchBoard();
+      },
+
+      renderKlassPicker() {
+        const select = document.getElementById("progressKlass");
+        if (!select) return;
+        const current = this.boardKlass;
+        select.innerHTML = "";
+        const all = document.createElement("option");
+        all.value = "";
+        all.textContent = "全部班級";
+        select.appendChild(all);
+        (this.klassList || []).forEach((item) => {
+          const option = document.createElement("option");
+          option.value = String(item.klass);
+          option.textContent = item.klass + "（" + item.percent + "%）";
+          select.appendChild(option);
+        });
+        if (current && !this.klassList.some((item) => String(item.klass) === String(current))) {
+          const option = document.createElement("option");
+          option.value = current;
+          option.textContent = current;
+          select.appendChild(option);
+        }
+        select.value = current;
       },
 
       startBoardPoll() {
@@ -5797,9 +5882,12 @@
           });
         }
 
+        this.renderKlassPicker();
+
         const meta = document.getElementById("progressMetaText");
         if (meta) {
-          meta.textContent = "已完成 " + board.done + " / " + board.total + " 題・已開始 " +
+          const scope = this.boardKlass ? "班級 " + this.boardKlass : "全部班級";
+          meta.textContent = scope + "・已完成 " + board.done + " / " + board.total + " 題・已開始 " +
             board.started + " 人・全部完成 " + board.finished + " 人" +
             (board.at ? "・更新 " + board.at : "");
         }

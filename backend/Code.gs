@@ -223,7 +223,8 @@ function board_(book, body) {
 
   const examId = String(body.examId || "").trim();
   const ver = String(body.ver || "").trim();
-  const cacheKey = "board:" + epochOf_(examId) + ":" + examId + "|" + ver;
+  const klassFilter = String(body.klass || "").trim();
+  const cacheKey = "board:" + epochOf_(examId) + ":" + examId + "|" + ver + "|" + klassFilter;
   const cached = cache_().get(cacheKey);
   if (cached) {
     try {
@@ -241,18 +242,38 @@ function board_(book, body) {
   }
 
   const rows = sheet.getRange(2, 1, lastRow - 1, PROGRESS_HEADERS.length).getValues();
-  const students = {};
+  const perKlass = {};
   rows.forEach(function (row) {
     if (String(row[1]) !== examId) return;
     if (ver && String(row[2]) !== ver) return;
+    const klass = String(row[3] || "");
     const seat = String(row[4] || "");
-    if (!seat) return;
-    const key = String(row[3] || "") + "-" + seat;
-    students[key] = {
+    if (!klass || !seat) return;
+    if (!perKlass[klass]) perKlass[klass] = {};
+    perKlass[klass][seat] = {
       seat: seat,
       done: Number(row[5]) || 0,
       total: Number(row[6]) || 0
     };
+  });
+
+  const klassList = Object.keys(perKlass).sort().map(function (klass) {
+    const seats = Object.keys(perKlass[klass]);
+    let klassDone = 0;
+    let klassTotal = 0;
+    seats.forEach(function (seat) {
+      klassDone += perKlass[klass][seat].done;
+      klassTotal += perKlass[klass][seat].total;
+    });
+    return { klass: klass, percent: klassTotal ? Math.round(klassDone / klassTotal * 100) : 0, students: seats.length };
+  });
+
+  const students = {};
+  Object.keys(perKlass).forEach(function (klass) {
+    if (klassFilter && klass !== klassFilter) return;
+    Object.keys(perKlass[klass]).forEach(function (seat) {
+      students[klass + "-" + seat] = perKlass[klass][seat];
+    });
   });
 
   let done = 0;
@@ -281,6 +302,8 @@ function board_(book, body) {
     done: done,
     total: total,
     students: list,
+    klassList: klassList,
+    klass: klassFilter,
     started: started,
     finished: finished
   };
