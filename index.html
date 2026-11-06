@@ -2580,7 +2580,7 @@
 
     .progress-turtle {
       position: absolute;
-      top: -34px;
+      top: -40px;
       left: 0;
       width: 68px;
       height: 46px;
@@ -2667,8 +2667,13 @@
       height: 34px;
     }
 
-    #viewProgress.progress-big .progress-toolbar {
+    #viewProgress.progress-big .progress-toolbar .btn-chip:not(#progressBigBtn) {
       display: none;
+    }
+
+    #viewProgress.progress-big .progress-toolbar {
+      justify-content: flex-end;
+      opacity: 0.85;
     }
 
     .hotspot-meta {
