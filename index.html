@@ -2115,6 +2115,121 @@
       text-align: right;
     }
 
+    /* 教師檢討畫筆：全螢幕畫布與浮動工具列（隱藏入口，筆跡只存本機） */
+    .ink-layer {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 480;
+      display: none;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .ink-layer.active {
+      display: block;
+    }
+
+    .ink-layer.passthrough {
+      pointer-events: none;
+      cursor: default;
+    }
+
+    .ink-palette {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      z-index: 9500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-width: min(94vw, 760px);
+      padding: 8px 10px;
+      background: rgba(35, 28, 22, 0.95);
+      border: 1px solid rgba(232, 202, 157, 0.45);
+      border-radius: 10px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+    }
+
+    .ink-palette.active {
+      display: flex;
+    }
+
+    .ink-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      color: #E6DCCD;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(232, 202, 157, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .ink-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .ink-btn.on {
+      background: var(--seal-red);
+      border-color: #E8CA9D;
+      color: #FFFFFF;
+    }
+
+    .ink-btn.ink-close {
+      border-color: rgba(185, 56, 44, 0.7);
+      color: #F3C7C1;
+    }
+
+    .ink-swatch {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .ink-swatch.on {
+      border-color: #F7EAD4;
+      box-shadow: 0 0 0 2px rgba(185, 56, 44, 0.95);
+    }
+
+    .ink-divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(232, 202, 157, 0.28);
+    }
+
+    .desk-title {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    @media (max-width: 768px) {
+      .ink-palette {
+        bottom: 8px;
+        gap: 4px;
+        padding: 6px 8px;
+      }
+      .ink-btn {
+        font-size: 0.72rem;
+        padding: 4px 7px;
+      }
+      .ink-swatch {
+        width: 19px;
+        height: 19px;
+      }
+    }
     @media (max-width: 768px) {
       body {
         padding: 8px;
@@ -2554,6 +2669,30 @@
 
   <!-- 類題自由練已改為獨立頁面，不再使用小視窗 -->
 
+  <!-- 教師檢討畫筆圖層（隱藏入口：長按頁首標題 1.2 秒，或按 Ctrl+Alt+P） -->
+  <canvas id="teacherInkLayer" class="ink-layer" aria-hidden="true"></canvas>
+
+  <div class="ink-palette" id="inkPalette" role="toolbar" aria-label="教師檢討畫筆工具列">
+    <button type="button" class="ink-btn on" data-ink-tool="pen" title="畫筆（B）">✒️ 筆</button>
+    <button type="button" class="ink-btn" data-ink-tool="highlighter" title="螢光筆（H）">🖍 螢光</button>
+    <button type="button" class="ink-btn" data-ink-tool="eraser" title="橡皮擦（E，整筆擦除）">🧽 擦</button>
+    <span class="ink-divider"></span>
+    <button type="button" class="ink-swatch on" data-ink-color="#B9382C" style="background:#B9382C" title="硃紅"></button>
+    <button type="button" class="ink-swatch" data-ink-color="#2C2219" style="background:#2C2219" title="墨黑"></button>
+    <button type="button" class="ink-swatch" data-ink-color="#1F5C7A" style="background:#1F5C7A" title="青碧"></button>
+    <button type="button" class="ink-swatch" data-ink-color="#D9A227" style="background:#D9A227" title="藤黃"></button>
+    <span class="ink-divider"></span>
+    <button type="button" class="ink-btn" data-ink-width="3" title="細筆">細</button>
+    <button type="button" class="ink-btn on" data-ink-width="6" title="中筆">中</button>
+    <button type="button" class="ink-btn" data-ink-width="10" title="粗筆">粗</button>
+    <span class="ink-divider"></span>
+    <button type="button" class="ink-btn" id="inkUndoBtn" onclick="App.Ink.undo()" title="復原上一筆（Ctrl+Z）">↩ 復原</button>
+    <button type="button" class="ink-btn on" data-ink-mode="pen" title="畫筆模式：在畫面上書寫（V 切換）">✒️ 畫筆模式</button>
+    <button type="button" class="ink-btn" data-ink-mode="cursor" title="游標模式：點選項、按按鈕、捲動頁面（V 切換）">🖱 游標模式</button>
+    <span class="ink-divider"></span>
+    <button type="button" class="ink-btn" id="inkClearBtn" onclick="App.Ink.clearPage()" title="清除這一頁的全部筆跡">🗑 清除本頁</button>
+    <button type="button" class="ink-btn ink-close" onclick="App.Ink.disable()" title="收起畫筆（Esc）">✕ 收筆</button>
+  </div>
   <!-- 浮動訊息 Toast -->
   <div class="toast-box" id="toastBox">提示訊息</div>
 
@@ -2755,6 +2894,7 @@
         document.querySelectorAll(".view-card").forEach(v => v.classList.remove("active"));
         document.getElementById(viewId).classList.add("active");
         window.scrollTo({ top: 0, behavior: "smooth" });
+        if (App.Ink) App.Ink.syncContext();
       },
 
       showSetup() {
@@ -2794,6 +2934,7 @@
         document.getElementById("btnPrev").disabled = (AppState.currentIndex === 0);
         document.getElementById("btnNext").textContent = 
           (AppState.currentIndex === AppState.selectedQIds.length - 1) ? "完成詳解・進入類題 ➔" : "下一題 ➔";
+        if (App.Ink) App.Ink.syncContext();
       },
 
       esc(str) {
@@ -3165,6 +3306,7 @@
         if (!qData) return;
         this.renderPassage(qData);
         this.renderStem(qData);
+        if (App.Ink) App.Ink.syncContext();
       },
 
       renderOptions(qData) {
@@ -3943,9 +4085,609 @@
         // 保留擴充
       }
     };
+    // ---------------------------------------------------------------
+    // 教師檢討畫筆：隱藏入口為長按頁首標題 1.2 秒，或按 Ctrl+Alt+P
+    // 筆跡只寫在瀏覽器本機的 localStorage，不上傳、不影響學生端畫面
+    // ---------------------------------------------------------------
+    const Ink = {
+      STORE_KEY: "exam-detective:ink:v1",
+      MAX_CONTEXTS: 80,
+      MAX_UNDO: 40,
+      HOLD_MS: 1200,
+
+      active: false,
+      tool: "pen",
+      color: "#B9382C",
+      width: 6,
+      passthrough: false,
+      mode: "pen",
+
+      canvas: null,
+      ctx: null,
+      palette: null,
+
+      store: null,
+      contextKey: "",
+      strokes: [],
+      history: [],
+      stroke: null,
+      renderedCount: 0,
+      gestureChanged: false,
+      pointerId: null,
+      erasing: false,
+      erasePushed: false,
+      needsFullRender: false,
+      frame: null,
+      scrollFrame: null,
+      saveTimer: null,
+      watchTimer: null,
+      dpr: 1,
+
+      init() {
+        this.canvas = document.getElementById("teacherInkLayer");
+        this.palette = document.getElementById("inkPalette");
+        if (!this.canvas || !this.palette) return;
+        this.ctx = this.canvas.getContext("2d");
+        this.store = this.loadStore();
+        this.bindPalette();
+        this.bindCanvas();
+        this.bindEntry();
+        this.bindKeys();
+        window.addEventListener("scroll", () => this.scheduleRender(), { passive: true });
+        window.addEventListener("resize", () => this.scheduleRender());
+        window.addEventListener("pagehide", () => this.persistNow());
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") this.persistNow();
+        });
+        this.updatePalette();
+      },
+
+      // --- 入口：長按標題或鍵盤快捷 -------------------------------------------------
+      bindEntry() {
+        const title = document.querySelector(".desk-title");
+        if (!title) return;
+        let timer = null;
+        let startX = 0;
+        let startY = 0;
+        const cancel = () => {
+          if (timer !== null) clearTimeout(timer);
+          timer = null;
+        };
+        title.addEventListener("pointerdown", (event) => {
+          if (this.active) return;
+          startX = event.clientX;
+          startY = event.clientY;
+          cancel();
+          timer = setTimeout(() => {
+            timer = null;
+            this.enable();
+          }, this.HOLD_MS);
+        });
+        title.addEventListener("pointermove", (event) => {
+          if (timer === null) return;
+          if (Math.abs(event.clientX - startX) > 12 || Math.abs(event.clientY - startY) > 12) cancel();
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach((type) => title.addEventListener(type, cancel));
+        title.addEventListener("contextmenu", (event) => {
+          if (timer !== null) event.preventDefault();
+        });
+      },
+
+      bindKeys() {
+        document.addEventListener("keydown", (event) => {
+          if (event.altKey && event.ctrlKey && String(event.key).toLowerCase() === "p") {
+            event.preventDefault();
+            if (this.active) this.disable();
+            else this.enable();
+            return;
+          }
+          if (!this.active) return;
+          const key = String(event.key).toLowerCase();
+          if (key === "escape") {
+            this.disable();
+            return;
+          }
+          if (key === "z" && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            this.undo();
+            return;
+          }
+          if (event.ctrlKey || event.altKey || event.metaKey) return;
+          if (key === "v") this.toggleMode();
+          else if (key === "e") { this.setTool("eraser"); this.setMode("pen"); }
+          else if (key === "h") { this.setTool("highlighter"); this.setMode("pen"); }
+          else if (key === "b" || key === "p") { this.setTool("pen"); this.setMode("pen"); }
+        }, true);
+      },
+
+      enable() {
+        if (this.active) return;
+        this.active = true;
+        this.canvas.classList.add("active");
+        this.palette.classList.add("active");
+        this.mode = "pen";
+        this.passthrough = false;
+        this.contextKey = "";
+        this.syncContext(true);
+        this.updatePalette();
+        this.render();
+        clearInterval(this.watchTimer);
+        this.watchTimer = setInterval(() => this.syncContext(), 350);
+        App.showToast("教師檢討畫筆已啟用・筆跡只留在本機");
+      },
+
+      disable() {
+        if (!this.active) return;
+        this.persistNow();
+        this.active = false;
+        this.mode = "pen";
+        this.passthrough = false;
+        this.stroke = null;
+        this.pointerId = null;
+        this.erasing = false;
+        this.canvas.classList.remove("active", "passthrough");
+        this.palette.classList.remove("active");
+        clearInterval(this.watchTimer);
+        this.watchTimer = null;
+        clearTimeout(this.saveTimer);
+        this.saveTimer = null;
+        this.render();
+        App.showToast("畫筆已收起・筆跡已存本機");
+      },
+
+      // --- 工具列 --------------------------------------------------------------
+      bindPalette() {
+        this.palette.addEventListener("click", (event) => {
+          const button = event.target.closest ? event.target.closest("button") : null;
+          if (!button) return;
+          if (button.dataset.inkMode) {
+            this.setMode(button.dataset.inkMode);
+            return;
+          }
+          if (button.dataset.inkTool) {
+            this.setTool(button.dataset.inkTool);
+            return;
+          }
+          if (button.dataset.inkColor) {
+            this.color = button.dataset.inkColor;
+            this.updatePalette();
+            return;
+          }
+          if (button.dataset.inkWidth) {
+            this.width = Number(button.dataset.inkWidth) || 6;
+            this.updatePalette();
+          }
+        });
+      },
+
+      setTool(tool) {
+        this.tool = ["pen", "highlighter", "eraser"].indexOf(tool) > -1 ? tool : "pen";
+        this.updatePalette();
+      },
+
+      updatePalette() {
+        if (!this.palette) return;
+        this.palette.querySelectorAll("[data-ink-tool]").forEach((button) => {
+          button.classList.toggle("on", button.dataset.inkTool === this.tool);
+        });
+        this.palette.querySelectorAll("[data-ink-color]").forEach((button) => {
+          button.classList.toggle("on", String(button.dataset.inkColor).toUpperCase() === String(this.color).toUpperCase());
+        });
+        this.palette.querySelectorAll("[data-ink-width]").forEach((button) => {
+          button.classList.toggle("on", Number(button.dataset.inkWidth) === Number(this.width));
+        });
+        this.palette.querySelectorAll("[data-ink-mode]").forEach((button) => {
+          button.classList.toggle("on", button.dataset.inkMode === this.mode);
+        });
+      },
+
+      setMode(mode) {
+        if (!this.active) return;
+        const next = mode === "cursor" ? "cursor" : "pen";
+        if (next === this.mode) return;
+        this.mode = next;
+        this.passthrough = next === "cursor";
+        this.canvas.classList.toggle("passthrough", this.passthrough);
+        this.updatePalette();
+        App.showToast(this.passthrough
+          ? "游標模式：可直接點選項、按按鈕與捲動頁面"
+          : "畫筆模式：回到直接在畫面上圈畫");
+      },
+
+      toggleMode() {
+        this.setMode(this.mode === "cursor" ? "pen" : "cursor");
+      },
+
+      togglePassthrough() {
+        this.toggleMode();
+      },
+
+      undo() {
+        if (!this.active) return;
+        if (!this.history.length) {
+          App.showToast("這一頁沒有可復原的筆跡");
+          return;
+        }
+        this.strokes = this.history.pop();
+        this.needsFullRender = true;
+        this.render();
+        this.scheduleSave();
+        App.showToast("已復原上一步筆跡");
+      },
+
+      clearPage() {
+        if (!this.active) return;
+        if (!this.strokes.length) {
+          App.showToast("這一頁還沒有筆跡");
+          return;
+        }
+        if (!window.confirm("要清除這一頁的全部筆跡嗎？清除後仍可按一下「復原」救回。")) return;
+        this.pushHistory();
+        this.strokes = [];
+        this.needsFullRender = true;
+        this.render();
+        this.scheduleSave();
+        App.showToast("已清除這一頁筆跡");
+      },
+
+      pushHistory() {
+        this.history.push(this.strokes.slice());
+        if (this.history.length > this.MAX_UNDO) this.history.shift();
+      },
+
+      // --- 書寫 ---------------------------------------------------------------
+      bindCanvas() {
+        this.canvas.addEventListener("pointerdown", (event) => this.onPointerDown(event), { passive: false });
+        this.canvas.addEventListener("pointermove", (event) => this.onPointerMove(event), { passive: false });
+        this.canvas.addEventListener("pointerup", (event) => this.onPointerUp(event));
+        this.canvas.addEventListener("pointercancel", () => this.onPointerUp(null));
+        window.addEventListener("pointerup", (event) => this.onPointerUp(event));
+        window.addEventListener("pointercancel", () => this.onPointerUp(null));
+      },
+
+      pointOf(event) {
+        const raw = event && typeof event.pressure === "number" && event.pressure > 0 ? event.pressure : 0.5;
+        return {
+          x: (event ? event.clientX : 0) + window.scrollX,
+          y: (event ? event.clientY : 0) + window.scrollY,
+          p: event && event.pointerType === "pen" ? raw : 0.5
+        };
+      },
+
+      onPointerDown(event) {
+        if (!this.active || this.passthrough) return;
+        if (this.pointerId !== null) return;
+        if (event.pointerType === "touch" && event.isPrimary === false) return;
+        if (event.pointerType === "mouse" && event.button > 0) return;
+        event.preventDefault();
+        this.syncContext();
+        this.pointerId = event.pointerId;
+        this.gestureChanged = false;
+        this.erasePushed = false;
+        if (this.tool === "eraser") {
+          this.erasing = true;
+          this.eraseAt(this.pointOf(event));
+          return;
+        }
+        this.stroke = {
+          tool: this.tool,
+          color: this.color,
+          width: this.width,
+          points: [this.pointOf(event)]
+        };
+        this.renderedCount = 1;
+        this.needsFullRender = false;
+        this.render();
+        if (event.pointerType !== "pen") {
+          try { this.canvas.setPointerCapture(event.pointerId); } catch (error) {}
+        }
+      },
+
+      onPointerMove(event) {
+        if (!this.active || this.passthrough) return;
+        if (this.pointerId === null || event.pointerId !== this.pointerId) return;
+        event.preventDefault();
+        const samples = typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [];
+        const events = samples && samples.length ? samples : [event];
+        if (this.erasing) {
+          events.forEach((item) => this.eraseAt(this.pointOf(item)));
+          return;
+        }
+        if (!this.stroke) return;
+        events.forEach((item) => {
+          const point = this.pointOf(item);
+          const last = this.stroke.points[this.stroke.points.length - 1];
+          if (!last || point.x !== last.x || point.y !== last.y) this.stroke.points.push(point);
+        });
+        this.scheduleFrame();
+      },
+
+      onPointerUp(event) {
+        if (!this.active) return;
+        if (this.pointerId === null) return;
+        if (event && event.pointerId !== undefined && event.pointerId !== this.pointerId) return;
+        this.endGesture(!event);
+      },
+
+      endGesture(cancelled) {
+        const pointerId = this.pointerId;
+        if (cancelled && this.stroke) {
+          this.stroke = null;
+          this.needsFullRender = true;
+        } else if (this.stroke) {
+          this.pushHistory();
+          this.strokes.push(this.stroke);
+          this.stroke = null;
+          this.needsFullRender = true;
+          this.gestureChanged = true;
+        }
+        this.erasing = false;
+        this.erasePushed = false;
+        this.pointerId = null;
+        if (pointerId !== null && this.canvas && this.canvas.hasPointerCapture) {
+          try {
+            if (this.canvas.hasPointerCapture(pointerId)) this.canvas.releasePointerCapture(pointerId);
+          } catch (error) {}
+        }
+        this.render();
+        if (this.gestureChanged) {
+          this.gestureChanged = false;
+          this.scheduleSave();
+        }
+      },
+
+      eraseAt(point) {
+        const reach = Math.max(10, this.width * 1.6);
+        const kept = this.strokes.filter((stroke) => !this.strokeHitsPoint(stroke, point, reach));
+        if (kept.length === this.strokes.length) return;
+        if (!this.erasePushed) {
+          this.pushHistory();
+          this.erasePushed = true;
+        }
+        this.strokes = kept;
+        this.gestureChanged = true;
+        this.needsFullRender = true;
+        this.render();
+      },
+
+      strokeHitsPoint(stroke, point, reach) {
+        const points = stroke.points || [];
+        if (!points.length) return false;
+        const half = stroke.tool === "highlighter" ? (stroke.width || 6) * 1.7 : (stroke.width || 6) / 2;
+        const limit = reach + half;
+        if (points.length === 1) return this.distance(point, points[0], points[0]) <= limit;
+        for (let index = 1; index < points.length; index += 1) {
+          if (this.distance(point, points[index - 1], points[index]) <= limit) return true;
+        }
+        return false;
+      },
+
+      distance(point, start, end) {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        if (!dx && !dy) return Math.hypot(point.x - start.x, point.y - start.y);
+        let ratio = ((point.x - start.x) * dx + (point.y - start.y) * dy) / (dx * dx + dy * dy);
+        ratio = Math.max(0, Math.min(1, ratio));
+        return Math.hypot(point.x - (start.x + ratio * dx), point.y - (start.y + ratio * dy));
+      },
+
+      // --- 畫面繪製 -------------------------------------------------------------
+      scheduleRender() {
+        if (!this.active || this.scrollFrame !== null) return;
+        this.scrollFrame = requestAnimationFrame(() => {
+          this.scrollFrame = null;
+          if (!this.active) return;
+          this.render();
+        });
+      },
+
+      scheduleFrame() {
+        if (this.frame !== null) return;
+        this.frame = requestAnimationFrame(() => {
+          this.frame = null;
+          if (!this.active) return;
+          if (!this.stroke || this.needsFullRender) {
+            this.render();
+            return;
+          }
+          const points = this.stroke.points;
+          if (points.length <= this.renderedCount) return;
+          const ctx = this.ctx;
+          ctx.save();
+          ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+          ctx.translate(-window.scrollX, -window.scrollY);
+          for (let index = Math.max(1, this.renderedCount); index < points.length; index += 1) {
+            this.drawSegment(ctx, this.stroke, index);
+          }
+          ctx.restore();
+          this.renderedCount = points.length;
+        });
+      },
+
+      render() {
+        const canvas = this.canvas;
+        const ctx = this.ctx;
+        if (!canvas || !ctx) return;
+        const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+        this.dpr = dpr;
+        const targetWidth = Math.max(1, Math.round(window.innerWidth * dpr));
+        const targetHeight = Math.max(1, Math.round(window.innerHeight * dpr));
+        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+        }
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!this.active) return;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.translate(-window.scrollX, -window.scrollY);
+        this.strokes.forEach((stroke) => this.drawStroke(ctx, stroke));
+        if (this.stroke) this.drawStroke(ctx, this.stroke);
+        this.needsFullRender = false;
+        this.renderedCount = this.stroke ? this.stroke.points.length : 0;
+      },
+
+      drawStroke(ctx, stroke) {
+        const points = stroke.points || [];
+        if (!points.length) return;
+        if (points.length === 1) {
+          const base = stroke.width || 6;
+          ctx.save();
+          ctx.globalAlpha = stroke.tool === "highlighter" ? 0.3 : 1;
+          ctx.fillStyle = stroke.color;
+          ctx.beginPath();
+          ctx.arc(points[0].x, points[0].y, Math.max(1.2, base / 2), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          return;
+        }
+        for (let index = 1; index < points.length; index += 1) this.drawSegment(ctx, stroke, index);
+      },
+
+      drawSegment(ctx, stroke, index) {
+        const points = stroke.points || [];
+        const previous = points[index - 1];
+        const current = points[index];
+        if (!previous || !current) return;
+        const next = points[index + 1];
+        const base = stroke.width || 6;
+        const isHighlighter = stroke.tool === "highlighter";
+        let lineWidth = isHighlighter ? Math.max(14, base * 3.4) : base;
+        if (!isHighlighter) {
+          const pressure = ((previous.p == null ? 0.5 : previous.p) + (current.p == null ? 0.5 : current.p)) / 2;
+          lineWidth = Math.max(0.8, base * Math.max(0.6, Math.min(1.5, pressure * 1.3)));
+        }
+        ctx.save();
+        ctx.globalAlpha = isHighlighter ? 0.3 : 1;
+        ctx.strokeStyle = stroke.color;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = lineWidth;
+        ctx.beginPath();
+        ctx.moveTo(previous.x, previous.y);
+        if (next) {
+          ctx.quadraticCurveTo(current.x, current.y, (current.x + next.x) / 2, (current.y + next.y) / 2);
+        } else {
+          ctx.quadraticCurveTo((previous.x + current.x) / 2, (previous.y + current.y) / 2, current.x, current.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      },
+
+      // --- 分頁情境與本機儲存 ------------------------------------------------------
+      currentContextKey() {
+        const viewEl = document.querySelector(".view-card.active");
+        const view = viewEl ? viewEl.id : "viewSetup";
+        if (view === "viewInvestigate") return view + ":q" + (AppState.activeQId || 0) + ":" + (AppState.stemMode || "text");
+        if (view === "viewDrills") return view + ":d" + (AppState.drillQueue[AppState.drillIndex] || AppState.drillIndex || 0);
+        if (view === "viewPractice") return view + ":p" + (AppState.practiceQid || 0);
+        return view;
+      },
+
+      syncContext(force) {
+        if (!this.active) return;
+        const key = this.currentContextKey();
+        if (!force && key === this.contextKey) return;
+        this.persistNow();
+        this.contextKey = key;
+        this.history = [];
+        this.stroke = null;
+        this.pointerId = null;
+        this.erasing = false;
+        const saved = this.store[key];
+        this.strokes = saved && Array.isArray(saved.strokes) ? saved.strokes.map((item) => this.decodeStroke(item)) : [];
+        this.needsFullRender = true;
+        this.render();
+        this.updatePalette();
+      },
+
+      scheduleSave() {
+        if (!this.active || !this.contextKey) return;
+        clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(() => {
+          this.saveTimer = null;
+          this.persistNow();
+        }, 300);
+      },
+
+      persistNow() {
+        if (!this.active || !this.contextKey) return;
+        clearTimeout(this.saveTimer);
+        this.saveTimer = null;
+        const key = this.contextKey;
+        if (this.strokes.length) {
+          this.store[key] = {
+            strokes: this.strokes.map((stroke) => this.encodeStroke(stroke)),
+            savedAt: Date.now()
+          };
+        } else {
+          delete this.store[key];
+        }
+        const keys = Object.keys(this.store);
+        if (keys.length > this.MAX_CONTEXTS) {
+          keys.sort((a, b) => (this.store[a].savedAt || 0) - (this.store[b].savedAt || 0));
+          keys.slice(0, keys.length - this.MAX_CONTEXTS).forEach((item) => {
+            delete this.store[item];
+          });
+        }
+        try {
+          window.localStorage.setItem(this.STORE_KEY, JSON.stringify(this.store));
+        } catch (error) {
+          App.showToast("本機儲存空間不足，請先清除部分頁面的筆跡");
+        }
+      },
+
+      loadStore() {
+        try {
+          const raw = window.localStorage.getItem(this.STORE_KEY);
+          const parsed = raw ? JSON.parse(raw) : {};
+          return parsed && typeof parsed === "object" ? parsed : {};
+        } catch (error) {
+          return {};
+        }
+      },
+
+      encodeStroke(stroke) {
+        const flat = [];
+        (stroke.points || []).forEach((point) => {
+          flat.push(
+            Math.round(point.x * 10) / 10,
+            Math.round(point.y * 10) / 10,
+            Math.round((point.p == null ? 0.5 : point.p) * 100) / 100
+          );
+        });
+        return {
+          t: stroke.tool === "highlighter" ? "h" : "p",
+          c: stroke.color,
+          w: stroke.width,
+          p: flat
+        };
+      },
+
+      decodeStroke(raw) {
+        const flat = raw && Array.isArray(raw.p) ? raw.p : [];
+        const points = [];
+        for (let index = 0; index + 1 < flat.length; index += 3) {
+          points.push({
+            x: Number(flat[index]) || 0,
+            y: Number(flat[index + 1]) || 0,
+            p: Number(flat[index + 2]) || 0.5
+          });
+        }
+        return {
+          tool: raw && raw.t === "h" ? "highlighter" : "pen",
+          color: raw && raw.c ? raw.c : "#B9382C",
+          width: Number(raw && raw.w) || 6,
+          points: points
+        };
+      }
+    };
+
+    App.Ink = Ink;
 
     window.addEventListener("DOMContentLoaded", () => {
       App.init();
+      Ink.init();
     });
   </script>
 </body>
