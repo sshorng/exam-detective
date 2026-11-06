@@ -1316,6 +1316,26 @@
     }
 
     /* 導覽切換列 */
+    .teacher-mode-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      padding: 10px 14px;
+      background: var(--seal-red-bg);
+      border: 1px solid #E9B7B2;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      color: var(--ink-primary);
+    }
+
+    .teacher-mode-banner strong {
+      font-family: var(--font-serif);
+      color: var(--seal-red);
+    }
+
     .nav-bar-footer {
       display: flex;
       justify-content: space-between;
@@ -2606,6 +2626,10 @@
 
     <!-- 畫面二：作答審查現場 -->
     <section id="viewInvestigate" class="view-card">
+      <div class="teacher-mode-banner" id="teacherModeBanner">
+        <span><strong id="teacherModeTitle">教師檢討模式</strong>・<span id="teacherModeQid"></span>・詳解已解鎖，可直接講解，不需班級座號</span>
+        <button type="button" class="btn-chip" onclick="App.Hotspot.openDashboard()">← 回錯題熱點</button>
+      </div>
       <div class="investigate-header">
         <div class="case-badge-group">
           <span class="case-badge" id="caseBadge">第 1 題</span>
@@ -3055,6 +3079,7 @@
       drillQueue: [],
       drillIndex: 0,
       drillSkipped: {},
+      teacherMode: false,
       
       // 紀錄各題狀態：{ [qId]: { ansSelected: null, ghostsFound: {}, stamped: false, goldNote: "" } }
       records: {}
@@ -3182,6 +3207,7 @@
       },
 
       startInvestigation() {
+        AppState.teacherMode = false;
         const classInput = document.getElementById("studentClass").value.trim();
         const seatInput = document.getElementById("studentSeat").value.trim();
         if (!classInput || !seatInput) {
@@ -3213,6 +3239,22 @@
         AppState.currentIndex = 0;
         this.showView("viewInvestigate");
         this.renderCurrentQuestion();
+      },
+
+      applyTeacherMode() {
+        const banner = document.getElementById("teacherModeBanner");
+        const footer = document.querySelector("#viewInvestigate .nav-bar-footer");
+        const on = Boolean(AppState.teacherMode);
+        if (banner) banner.style.display = on ? "flex" : "none";
+        if (footer) footer.style.display = on ? "none" : "";
+        const qid = document.getElementById("teacherModeQid");
+        if (qid) qid.textContent = on ? "第 " + (AppState.activeQId || 0) + " 題" : "";
+        const stepText = document.querySelector("#viewInvestigate .step-banner span:last-child");
+        if (stepText) {
+          stepText.textContent = on
+            ? "正解與詳解（教師檢討模式，已解鎖）"
+            : "第一步：先選出正解，選對才解鎖詳解與題本硃批";
+        }
       },
 
       showView(viewId) {
@@ -3260,6 +3302,7 @@
         document.getElementById("btnNext").textContent = 
           (AppState.currentIndex === AppState.selectedQIds.length - 1) ? "完成詳解・進入類題 ➔" : "下一題 ➔";
         if (App.Ink) App.Ink.syncContext();
+        this.applyTeacherMode();
       },
 
       esc(str) {
@@ -5352,6 +5395,7 @@
       },
 
       openDashboard() {
+        AppState.teacherMode = false;
         App.showView("viewHotspot");
         this.refresh();
       },
@@ -5538,14 +5582,15 @@
       jumpToQuestion(qid) {
         const target = Number(qid);
         if (!target) return;
-        if (AppState.selectedQIds.indexOf(target) < 0) {
-          AppState.selectedQIds.push(target);
-          AppState.selectedQIds.sort((left, right) => left - right);
-        }
-        if (!AppState.records[target]) {
-          AppState.records[target] = { ansSelected: null, ghostsFound: {}, stamped: false };
-        }
-        AppState.currentIndex = AppState.selectedQIds.indexOf(target);
+        const question = EXAM_DB.find((item) => item.id === target);
+        AppState.teacherMode = true;
+        AppState.selectedQIds = [target];
+        AppState.currentIndex = 0;
+        AppState.records[target] = {
+          ansSelected: question ? question.official_ans : null,
+          ghostsFound: {},
+          stamped: false
+        };
         App.showView("viewInvestigate");
         App.renderCurrentQuestion();
         window.scrollTo({ top: 0, behavior: "smooth" });
