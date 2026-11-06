@@ -175,6 +175,34 @@
       box-shadow: 0 0 0 2px rgba(180, 101, 19, 0.15);
     }
 
+    .resume-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 18px 0 4px 0;
+      padding: 10px 16px;
+      background: #FBF4E4;
+      border: 1px dashed var(--amber-border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: var(--ink-primary);
+    }
+    .resume-bar[hidden] {
+      display: none;
+    }
+    .resume-text {
+      flex: 1;
+      min-width: 220px;
+      line-height: 1.45;
+    }
+    .resume-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
 
     .selector-bar {
       display: flex;
@@ -2652,6 +2680,9 @@
       min-height: 22px;
       flex: 0 0 auto;
     }
+    .progress-lane.klass-on {
+      grid-template-columns: 76px 1fr;
+    }
 
     .lane-seat {
       font-family: var(--font-serif);
@@ -2791,6 +2822,9 @@
     #viewProgress.progress-big .progress-lane {
       grid-template-columns: 60px 1fr;
       gap: 14px;
+    }
+    #viewProgress.progress-big .progress-lane.klass-on {
+      grid-template-columns: 96px 1fr;
     }
 
     #viewProgress.progress-big .lane-seat {
@@ -3122,6 +3156,14 @@
           <label for="studentSeat">座號</label>
           <input type="text" id="studentSeat" placeholder="例：05" value="">
         </div>
+      </div>
+
+      <div class="resume-bar" id="studentResumeBar" hidden>
+        <span class="resume-text" id="studentResumeText"></span>
+        <span class="resume-actions">
+          <button type="button" class="btn-chip" onclick="App.resumeSession()">接續上次進度</button>
+          <button type="button" class="btn-chip" onclick="App.forgetSession()">換人使用</button>
+        </span>
       </div>
 
       <div class="selector-bar">
@@ -3661,6 +3703,11 @@
       init() {
         this.renderGrid();
         this.loadLocalCache();
+        this.renderResumeBar();
+        window.addEventListener("pagehide", () => this.saveStudentSession());
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") this.saveStudentSession();
+        });
 
         // 點關鍵詞開啟浮動說明
         document.addEventListener("click", (e) => {
@@ -3815,20 +3862,202 @@
           App.Hotspot.sendProgress();
         }
 
-        // 初始化 records
+        // 初始化 records；同一台裝置、同一個班級座號，自動接回上次的蓋章
+        const cachedSession = this.findStudentSession(classInput, seatInput);
+        const sameStudent = Boolean(cachedSession) &&
+          this.normalizeText(cachedSession.klass) === this.normalizeText(classInput) &&
+          this.identitySeat(cachedSession.seat) === this.identitySeat(seatInput);
         AppState.selectedQIds.forEach(id => {
           if (!AppState.records[id]) {
-            AppState.records[id] = {
-              ansSelected: null,
-              ghostsFound: {},
-              stamped: false
-            };
+            const saved = sameStudent && cachedSession.records ? cachedSession.records[id] : null;
+            AppState.records[id] = saved
+              ? { ansSelected: saved.ansSelected || null, ghostsFound: saved.ghostsFound || {}, stamped: Boolean(saved.stamped) }
+              : { ansSelected: null, ghostsFound: {}, stamped: false };
           }
         });
+        if (sameStudent) {
+          const restored = AppState.selectedQIds.filter((id) => AppState.records[id] && AppState.records[id].stamped).length;
+          if (restored) this.showToast("已接回上次紀錄，保留 " + restored + " 題的蓋章狀態。");
+        }
+
+        this.saveStudentSession();
 
         AppState.currentIndex = 0;
         this.showView("viewInvestigate");
         this.renderCurrentQuestion();
+      },
+
+      // --- 學生身分與進度的本機記憶（重新整理不必重填、可接續） ------------------
+      // 一台平板常多人共用：用「班級|座號」分別記住每個人的狀況，只保留最近 8 位。
+      normalizeText(value) {
+        const text = String(value == null ? "" : value)
+          .replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+        return text.trim().replace(/\s+/g, "");
+      },
+
+      identitySeat(value) {
+        const seat = this.normalizeText(value);
+        if (/^\d{1,2}$/.test(seat)) return ("0" + seat).slice(-2);
+        return seat;
+      },
+
+      identityKey(klass, seat) {
+        return this.normalizeText(klass) + "|" + this.identitySeat(seat);
+      },
+
+      studentStorageKey() {
+        const examId = App.Hotspot && App.Hotspot.examId ? App.Hotspot.examId : "default";
+        return "exam-detective:student:v1:" + examId;
+      },
+
+      loadStudentStore() {
+        try {
+          const raw = window.localStorage.getItem(this.studentStorageKey());
+          if (!raw) return { last: "", people: {} };
+          const data = JSON.parse(raw);
+          if (!data || typeof data !== "object") return { last: "", people: {} };
+          if (!data.people) {
+            if (data.klass && data.seat && Array.isArray(data.qids)) {
+              const key = this.identityKey(data.klass, data.seat);
+              const people = {};
+              people[key] = data;
+              return { last: key, people: people };
+            }
+            return { last: "", people: {} };
+          }
+          return { last: String(data.last || ""), people: data.people };
+        } catch (error) {
+          return { last: "", people: {} };
+        }
+      },
+
+      saveStudentStore(store) {
+        try {
+          const keys = Object.keys(store.people);
+          if (keys.length > 8) {
+            keys.sort((left, right) => (store.people[left].at || 0) - (store.people[right].at || 0));
+            keys.slice(0, keys.length - 8).forEach((key) => { delete store.people[key]; });
+          }
+          window.localStorage.setItem(this.studentStorageKey(), JSON.stringify({
+            last: store.last,
+            people: store.people
+          }));
+        } catch (error) {}
+      },
+
+      saveStudentSession() {
+        const qids = AppState.selectedQIds || [];
+        if (!AppState.studentClass || !AppState.studentSeat || !qids.length) return;
+        const records = {};
+        qids.forEach((id) => {
+          const rec = AppState.records[id];
+          if (!rec) return;
+          records[id] = {
+            ansSelected: rec.ansSelected || null,
+            stamped: Boolean(rec.stamped),
+            ghostsFound: rec.ghostsFound || {}
+          };
+        });
+        const klass = this.normalizeText(AppState.studentClass);
+        const seat = this.identitySeat(AppState.studentSeat);
+        const key = this.identityKey(klass, seat);
+        const store = this.loadStudentStore();
+        store.people[key] = {
+          klass: klass,
+          seat: seat,
+          qids: qids.slice(),
+          records: records,
+          at: Date.now()
+        };
+        store.last = key;
+        this.saveStudentStore(store);
+      },
+
+      loadStudentSession() {
+        const store = this.loadStudentStore();
+        if (!store.last) return null;
+        return store.people[store.last] || null;
+      },
+
+      findStudentSession(klass, seat) {
+        const store = this.loadStudentStore();
+        return store.people[this.identityKey(klass, seat)] || null;
+      },
+
+      formatWhen(at) {
+        if (!at) return "";
+        const date = new Date(Number(at));
+        if (isNaN(date.getTime())) return "";
+        const pad = (value) => String(value).padStart(2, "0");
+        return (date.getMonth() + 1) + "/" + date.getDate() + " " + pad(date.getHours()) + ":" + pad(date.getMinutes());
+      },
+
+      renderResumeBar() {
+        const bar = document.getElementById("studentResumeBar");
+        const text = document.getElementById("studentResumeText");
+        if (!bar || !text) return;
+        const data = this.loadStudentSession();
+        if (!data) {
+          bar.hidden = true;
+          return;
+        }
+        const klassInput = document.getElementById("studentClass");
+        const seatInput = document.getElementById("studentSeat");
+        if (klassInput && !klassInput.value) klassInput.value = data.klass;
+        if (seatInput && !seatInput.value) seatInput.value = data.seat;
+        const done = data.qids.filter((id) => data.records && data.records[id] && data.records[id].stamped).length;
+        const when = this.formatWhen(data.at);
+        text.textContent = "這台裝置上次寫的是 " + data.klass + " 班 " + data.seat + " 號・" +
+          data.qids.length + " 題已蓋章 " + done + " 題" + (when ? "・" + when : "") + "。";
+        bar.hidden = false;
+      },
+
+      forgetSession() {
+        const store = this.loadStudentStore();
+        if (store.last && store.people[store.last]) delete store.people[store.last];
+        store.last = "";
+        this.saveStudentStore(store);
+        const bar = document.getElementById("studentResumeBar");
+        if (bar) bar.hidden = true;
+        const klassInput = document.getElementById("studentClass");
+        const seatInput = document.getElementById("studentSeat");
+        if (klassInput) klassInput.value = "";
+        if (seatInput) seatInput.value = "";
+        AppState.studentClass = "";
+        AppState.studentSeat = "";
+        this.showToast("已清除這台裝置的上次紀錄，請重新填班級與座號。");
+      },
+
+      resumeSession() {
+        const data = this.loadStudentSession();
+        if (!data) {
+          this.showToast("這台裝置沒有可接續的紀錄。");
+          return;
+        }
+        AppState.teacherMode = false;
+        AppState.studentClass = data.klass;
+        AppState.studentSeat = data.seat;
+        const klassInput = document.getElementById("studentClass");
+        const seatInput = document.getElementById("studentSeat");
+        if (klassInput) klassInput.value = data.klass;
+        if (seatInput) seatInput.value = data.seat;
+        AppState.selectedQIds = data.qids.slice();
+        AppState.selectedQIds.forEach((id) => {
+          const saved = data.records ? data.records[id] : null;
+          AppState.records[id] = saved
+            ? { ansSelected: saved.ansSelected || null, ghostsFound: saved.ghostsFound || {}, stamped: Boolean(saved.stamped) }
+            : { ansSelected: null, ghostsFound: {}, stamped: false };
+        });
+        this.updateGridClasses();
+        this.updateSelectedCount();
+        const nextIndex = AppState.selectedQIds.findIndex((id) => !(AppState.records[id] && AppState.records[id].stamped));
+        AppState.currentIndex = nextIndex < 0 ? 0 : nextIndex;
+        if (App.Hotspot) App.Hotspot.sendProgress();
+        this.showView("viewInvestigate");
+        this.renderCurrentQuestion();
+        this.showToast(nextIndex < 0
+          ? "全部題目都蓋章了，已回到第一題。"
+          : "已接續上次進度，從第 " + AppState.selectedQIds[nextIndex] + " 題繼續。");
       },
 
       applyTeacherMode() {
@@ -4847,6 +5076,7 @@
         const qRec = AppState.records[qId];
         if (document.getElementById("stampActionBtn").disabled) return;
         qRec.stamped = true;
+        this.saveStudentSession();
         this.renderJumpInline();
         if (App.Hotspot) App.Hotspot.sendProgress();
 
@@ -5881,7 +6111,9 @@
       },
 
       normalizeText(value) {
-        return String(value == null ? "" : value).trim().replace(/\s+/g, "");
+        const text = String(value == null ? "" : value)
+          .replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+        return text.trim().replace(/\s+/g, "");
       },
 
       clientId() {
@@ -6174,7 +6406,15 @@
         const students = document.getElementById("progressStudents");
         if (students) {
           students.innerHTML = "";
-          const list = board.students.slice().sort((left, right) => {
+          const withKlass = !this.boardKlass;
+          const source = withKlass
+            ? board.students
+            : board.students.filter((item) => !item.klass || String(item.klass) === String(this.boardKlass));
+          const list = source.slice().sort((left, right) => {
+            if (withKlass) {
+              const byKlass = String(left.klass || "").localeCompare(String(right.klass || ""));
+              if (byKlass) return byKlass;
+            }
             return (Number(left.seat) - Number(right.seat)) ||
               String(left.seat).localeCompare(String(right.seat));
           });
@@ -6188,12 +6428,17 @@
             const rate = Math.max(0, Math.min(100, Number(student.rate) || 0));
             const lane = document.createElement("div");
             lane.className = "progress-lane" +
+              (withKlass ? " klass-on" : "") +
               (student.placeholder ? " empty" : "") +
               (rate >= 100 ? " done" : (rate > 0 ? " mid" : ""));
-            lane.title = "座號 " + student.seat + "・" + rate + "%";
+            const seatLabel = withKlass && student.klass
+              ? String(student.klass) + "-" + String(student.seat)
+              : String(student.seat);
+            lane.title = (withKlass && student.klass ? "班級 " + student.klass + "・" : "") +
+              "座號 " + student.seat + "・" + rate + "%";
             const seat = document.createElement("span");
             seat.className = "lane-seat";
-            seat.textContent = String(student.seat);
+            seat.textContent = seatLabel;
             const track = document.createElement("span");
             track.className = "lane-track";
             const fill = document.createElement("i");

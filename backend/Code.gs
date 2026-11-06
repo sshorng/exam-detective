@@ -31,6 +31,20 @@ const HISTORY_HEADERS = ["清空時間", "層級", "時間", "批次", "考卷",
 const TOKEN_HEADERS = ["權杖", "到期時間", "建立時間"];
 const PROGRESS_HEADERS = ["更新時間", "考卷", "版本", "班級", "座號", "已完成", "應完成", "客戶端"];
 
+// 班級與座號先正規化（去空白、全形轉半形），避免同一位學生被寫成兩列
+function squash_(value) {
+  return String(value == null ? "" : value)
+    .replace(/[\uFF01-\uFF5E]/g, function (ch) { return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0); })
+    .replace(/\s+/g, "");
+}
+
+// 座號再補一位數（5 與 05 視為同一個人），避免同一位學生被記成兩列
+function squashSeat_(value) {
+  const seat = squash_(value);
+  if (/^\d{1,2}$/.test(seat)) return ("0" + seat).slice(-2);
+  return seat;
+}
+
 function doPost(e) {
   try {
     const raw = (e && e.postData && e.postData.contents) || "{}";
@@ -53,7 +67,7 @@ function doPost(e) {
     if (action === "board") return json_(board_(book, body));
     if (action === "counts") return json_(counts_(book, body));
     if (action === "clear") return json_(clear_(book, body));
-    if (action === "info") return json_({ ok: true, ver: "hotspot-6" });
+    if (action === "info") return json_({ ok: true, ver: "hotspot-7" });
     return json_({ ok: false, error: "unknown-action" });
   } catch (error) {
     return json_({ ok: false, error: String((error && error.message) || error) });
@@ -61,7 +75,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, ver: "hotspot-6" });
+  return json_({ ok: true, ver: "hotspot-7" });
 }
 
 function json_(value) {
@@ -203,8 +217,8 @@ function bumpEpoch_(examId) {
 function progress_(book, body) {
   const examId = String(body.examId || "").trim();
   const ver = String(body.ver || "").trim();
-  const klass = String(body.klass || "").trim();
-  const seat = String(body.seat || "").trim();
+  const klass = squash_(body.klass);
+  const seat = squashSeat_(body.seat);
   const client = String(body.client || "").trim();
   const done = Math.max(0, Number(body.done) || 0);
   const total = Math.max(0, Number(body.total) || 0);
@@ -218,9 +232,14 @@ function progress_(book, body) {
     const rows = sheet.getRange(2, 1, lastRow - 1, PROGRESS_HEADERS.length).getValues();
     for (let index = 0; index < rows.length; index += 1) {
       if (String(rows[index][1]) === examId && String(rows[index][3]) === klass && String(rows[index][4]) === seat) {
+        const prevDone = Math.max(0, Number(rows[index][5]) || 0);
+        const prevTotal = Math.max(0, Number(rows[index][6]) || 0);
+        const sameRound = prevTotal === total;
+        const nextDone = sameRound ? Math.max(prevDone, done) : done;
+        row[5] = nextDone;
         sheet.getRange(index + 2, 1, 1, PROGRESS_HEADERS.length).setValues([row]);
         bumpEpoch_(examId);
-        return { ok: true, updated: true };
+        return { ok: true, updated: true, done: nextDone, kept: nextDone !== done };
       }
     }
   }
@@ -258,14 +277,26 @@ function board_(book, body) {
   rows.forEach(function (row) {
     if (String(row[1]) !== examId) return;
     if (ver && String(row[2]) !== ver) return;
-    const klass = String(row[3] || "");
-    const seat = String(row[4] || "");
+    const klass = squash_(row[3]);
+    const seat = squashSeat_(row[4]);
     if (!klass || !seat) return;
     if (!perKlass[klass]) perKlass[klass] = {};
+    const done = Number(row[5]) || 0;
+    const total = Number(row[6]) || 0;
+    const at = String(row[0] || "");
+    const prev = perKlass[klass][seat];
+    if (prev) {
+      const prevRate = prev.total ? prev.done / prev.total : 0;
+      const nextRate = total ? done / total : 0;
+      if (nextRate < prevRate) return;
+      if (nextRate === prevRate && at < prev.at) return;
+    }
     perKlass[klass][seat] = {
+      klass: klass,
       seat: seat,
-      done: Number(row[5]) || 0,
-      total: Number(row[6]) || 0
+      done: done,
+      total: total,
+      at: at
     };
   });
 
@@ -300,6 +331,7 @@ function board_(book, body) {
     if (item.done > 0) started += 1;
     if (item.total > 0 && item.done >= item.total) finished += 1;
     list.push({
+      klass: item.klass,
       seat: item.seat,
       rate: item.total ? Math.round(item.done / item.total * 100) : 0
     });
