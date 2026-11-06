@@ -40,9 +40,14 @@ function doPost(e) {
     if (action === "report") return json_(report_(book, body));
     if (action === "auth") return json_(auth_(book, body.key));
     if (action === "logout") return json_(logout_(book, body.token));
+    if (action === "sheetinfo") {
+      const infoCheck = guard_(book, body);
+      if (!infoCheck.ok) return json_({ ok: false, error: "auth" });
+      return json_(sheetInfo_(book));
+    }
     if (action === "counts") return json_(counts_(book, body));
     if (action === "clear") return json_(clear_(book, body));
-    if (action === "info") return json_({ ok: true, ver: "hotspot-2" });
+    if (action === "info") return json_({ ok: true, ver: "hotspot-3" });
     return json_({ ok: false, error: "unknown-action" });
   } catch (error) {
     return json_({ ok: false, error: String((error && error.message) || error) });
@@ -50,7 +55,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, ver: "hotspot-2" });
+  return json_({ ok: true, ver: "hotspot-3" });
 }
 
 function json_(value) {
@@ -158,6 +163,10 @@ function logout_(book, token) {
   sheet.getRange(2, 1, rows.length, TOKEN_HEADERS.length).clearContent();
   if (keep.length) sheet.getRange(2, 1, keep.length, TOKEN_HEADERS.length).setValues(keep);
   return { ok: true };
+}
+
+function sheetInfo_(book) {
+  return { ok: true, title: book.getName(), url: book.getUrl() };
 }
 
 function guard_(book, body) {

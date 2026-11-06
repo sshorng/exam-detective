@@ -1316,6 +1316,37 @@
     }
 
     /* 導覽切換列 */
+    .hotspot-sheet-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 8px 12px;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      color: var(--ink-primary);
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 8px;
+      text-decoration: none;
+    }
+
+    .hotspot-sheet-btn:hover {
+      border-color: var(--seal-red);
+      color: var(--seal-red);
+    }
+
+    .hotspot-sheet-btn span {
+      display: none;
+    }
+
+    @media (min-width: 900px) {
+      .hotspot-sheet-btn span {
+        display: inline;
+      }
+    }
+
     .desk-title.ink-entry {
       cursor: pointer;
     }
@@ -1351,6 +1382,40 @@
       border-radius: 8px;
       font-size: 0.86rem;
       color: var(--ink-primary);
+    }
+
+    .teacher-quicklist {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1 1 auto;
+    }
+
+    .teacher-quicklist button {
+      min-width: 44px;
+      min-height: 34px;
+      padding: 4px 10px;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      color: var(--ink-primary);
+      background: #FFFFFF;
+      border: 1px solid var(--paper-border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .teacher-quicklist button.on {
+      background: var(--seal-red);
+      border-color: var(--seal-red);
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    .teacher-quicklist button.teacher-back {
+      margin-left: auto;
+      color: var(--seal-red);
+      border-style: dashed;
     }
 
     .teacher-mode-banner strong {
@@ -2650,8 +2715,7 @@
     <!-- 畫面二：作答審查現場 -->
     <section id="viewInvestigate" class="view-card">
       <div class="teacher-mode-banner" id="teacherModeBanner">
-        <span><strong id="teacherModeTitle">教師檢討模式</strong>・<span id="teacherModeQid"></span>・詳解已解鎖，可直接講解，不需班級座號</span>
-        <button type="button" class="btn-chip" onclick="App.Hotspot.openDashboard()">← 回錯題熱點</button>
+        <div class="teacher-quicklist" id="teacherQuickList"></div>
       </div>
       <div class="investigate-header">
         <div class="case-badge-group">
@@ -2883,7 +2947,7 @@
             <button type="button" class="btn-chip" onclick="App.Hotspot.openClearModal(1)">清空本卷目前資料</button>
             <button type="button" class="btn-chip" onclick="App.Hotspot.openClearModal(2)">清空本卷含歷史</button>
             <button type="button" class="btn-chip" onclick="App.Hotspot.openClearModal(3)">清空全部回報資料</button>
-            <span id="hotspotSheetLink"></span>
+            <span id="hotspotSheetSlot"></span>
             <button type="button" class="btn-chip" onclick="App.showSetup()">回題號清單</button>
           </div>
         </div>
@@ -3275,8 +3339,7 @@
         const on = Boolean(AppState.teacherMode);
         if (banner) banner.style.display = on ? "flex" : "none";
         if (footer) footer.style.display = on ? "none" : "";
-        const qid = document.getElementById("teacherModeQid");
-        if (qid) qid.textContent = on ? "第 " + (AppState.activeQId || 0) + " 題" : "";
+        if (on && App.Hotspot && App.Hotspot.renderTeacherQuickList) App.Hotspot.renderTeacherQuickList();
         const chip = document.getElementById("teacherModeChip");
         const signedIn = Boolean(AppState.teacherSession);
         if (chip) chip.classList.toggle("on", on || signedIn);
@@ -5107,6 +5170,7 @@
       OUTBOX_KEY: "exam-detective:hotspot:outbox",
       CLIENT_KEY: "exam-detective:hotspot:client",
       TOKEN_KEY: "exam-detective:hotspot:token",
+      SHEET_KEY: "exam-detective:hotspot:sheet",
       TIMEOUT_MS: 8000,
       RETRY_TIMES: 2,
       DEDUPE_MS: 15000,
@@ -5196,6 +5260,27 @@
       categoryOf(qid) {
         const found = EXAM_DB.find((item) => item.id === Number(qid));
         return found ? found.category : "";
+      },
+
+      isSheetUrl(url) {
+        return /^https:\/\/docs\.google\.com\/spreadsheets\/d\/[A-Za-z0-9_-]{10,}/.test(String(url || ""));
+      },
+
+      applySheetUrl(url) {
+        if (!this.isSheetUrl(url)) return;
+        this.sheetUrl = url;
+        try {
+          window.localStorage.setItem(this.SHEET_KEY, url);
+        } catch (error) {}
+        this.renderSheetLink();
+      },
+
+      async loadSheetInfo() {
+        if (!this.token || !this.configured()) return;
+        try {
+          const result = await this.postWithRetry({ action: "sheetinfo", token: this.token });
+          if (result && result.ok) this.applySheetUrl(result.url);
+        } catch (error) {}
       },
 
       clearHint(level) {
@@ -5403,7 +5488,8 @@
           if (result && result.ok) {
             this.writeToken(result.token, result.expiry);
             AppState.teacherSession = true;
-            this.sheetUrl = result.sheetUrl || "";
+            if (result.sheetUrl) this.applySheetUrl(result.sheetUrl);
+            this.loadSheetInfo();
             this.closeAuthModal();
             this.openDashboard();
             App.showToast("已登入，這臺裝置之後不必再輸入密碼。");
@@ -5444,7 +5530,8 @@
             this.total = Number(result.total) || 0;
             this.klassCounts = result.klassCounts || {};
             this.since = result.since || "";
-            if (result.sheetUrl) this.sheetUrl = result.sheetUrl;
+            if (result.sheetUrl) this.applySheetUrl(result.sheetUrl);
+            if (!this.sheetUrl) this.loadSheetInfo();
           } else if (result && result.error === "auth") {
             this.clearToken();
             AppState.teacherSession = false;
@@ -5491,6 +5578,8 @@
           const parts = ["考卷代碼 " + this.examId, "題庫版本 " + this.qbVersion];
           if (this.klassFilter) parts.push("只看班級 " + this.klassFilter);
           if (this.since) parts.push("統計起點 " + this.since);
+          const pending = this.loadOutbox().length;
+          if (pending) parts.push("待補送 " + pending + " 筆");
           meta.textContent = parts.join(" ・ ");
         }
 
@@ -5584,12 +5673,11 @@
       },
 
       renderSheetLink() {
-        const holder = document.getElementById("hotspotSheetLink");
+        const holder = document.getElementById("hotspotSheetSlot");
         if (!holder) return;
         holder.innerHTML = "";
         const url = String(this.sheetUrl || "");
-        const valid = url.indexOf("https://docs.google.com/spreadsheets/") === 0;
-        if (!valid) {
+        if (!this.isSheetUrl(url)) {
           const note = document.createElement("span");
           note.className = "hotspot-sheet-note";
           note.textContent = "尚未取得試算表網址";
@@ -5600,10 +5688,36 @@
         link.href = url;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-        link.className = "hotspot-sheet-link";
-        link.title = "開啟回報試算表";
-        link.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 3v18"></path></svg><span>回報試算表</span>';
+        link.className = "hotspot-sheet-btn";
+        link.title = "開啟回報試算表（另開新分頁）";
+        link.setAttribute("aria-label", "開啟回報試算表");
+        link.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 3v18"></path><path d="M15 13l3 3-3 3"></path></svg><span>回報試算表</span>';
         holder.appendChild(link);
+      },
+
+      renderTeacherQuickList() {
+        const holder = document.getElementById("teacherQuickList");
+        if (!holder) return;
+        holder.innerHTML = "";
+        const ranked = this.ranking().filter((row) => row.count > 0);
+        const list = ranked.length
+          ? ranked.map((row) => row.qid)
+          : EXAM_DB.map((item) => item.id);
+        list.forEach((qid) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = qid;
+          button.title = "跳到第 " + qid + " 題";
+          if (Number(AppState.activeQId) === Number(qid)) button.className = "on";
+          button.addEventListener("click", () => this.jumpToQuestion(qid));
+          holder.appendChild(button);
+        });
+        const back = document.createElement("button");
+        back.type = "button";
+        back.className = "teacher-back";
+        back.textContent = "回錯題熱點";
+        back.addEventListener("click", () => this.openDashboard());
+        holder.appendChild(back);
       },
 
       jumpToQuestion(qid) {
@@ -5717,6 +5831,10 @@
         }
         this.qbVersion = this.buildQbVersion((typeof EXAM_DB !== "undefined" ? EXAM_DB : []));
         this.token = this.readToken();
+        const cachedSheet = (function () {
+          try { return window.localStorage.getItem("exam-detective:hotspot:sheet") || ""; } catch (error) { return ""; }
+        })();
+        if (this.isSheetUrl(cachedSheet)) this.sheetUrl = cachedSheet;
         const modal = document.getElementById("hotspotAuthModal");
         if (modal) {
           modal.addEventListener("click", (event) => {
