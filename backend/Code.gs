@@ -21,12 +21,15 @@ const SHEET_REPORT = "回報";
 const SHEET_HISTORY = "歷史";
 const SHEET_SETTING = "設定";
 const SHEET_TOKEN = "權杖";
+const SHEET_PROGRESS = "進度";
 const DEDUPE_MS = 10000;
 const TOKEN_DAYS = 90;
 const CACHE_TTL = 30;
+const BOARD_TTL = 10;
 const REPORT_HEADERS = ["時間", "批次", "考卷", "版本", "班級", "座號", "題號", "客戶端"];
 const HISTORY_HEADERS = ["清空時間", "層級", "時間", "批次", "考卷", "版本", "班級", "座號", "題號", "客戶端"];
 const TOKEN_HEADERS = ["權杖", "到期時間", "建立時間"];
+const PROGRESS_HEADERS = ["更新時間", "考卷", "版本", "班級", "座號", "已完成", "應完成", "客戶端"];
 
 function doPost(e) {
   try {
@@ -46,9 +49,11 @@ function doPost(e) {
       if (!infoCheck.ok) return json_({ ok: false, error: "auth" });
       return json_(sheetInfo_(book));
     }
+    if (action === "progress") return json_(progress_(book, body));
+    if (action === "board") return json_(board_(book, body));
     if (action === "counts") return json_(counts_(book, body));
     if (action === "clear") return json_(clear_(book, body));
-    if (action === "info") return json_({ ok: true, ver: "hotspot-4" });
+    if (action === "info") return json_({ ok: true, ver: "hotspot-5" });
     return json_({ ok: false, error: "unknown-action" });
   } catch (error) {
     return json_({ ok: false, error: String((error && error.message) || error) });
@@ -56,7 +61,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, ver: "hotspot-4" });
+  return json_({ ok: true, ver: "hotspot-5" });
 }
 
 function json_(value) {
@@ -72,6 +77,9 @@ function ensureSheets_(book) {
 
   const tokens = book.getSheetByName(SHEET_TOKEN) || book.insertSheet(SHEET_TOKEN);
   if (tokens.getLastRow() === 0) tokens.appendRow(TOKEN_HEADERS);
+
+  const progress = book.getSheetByName(SHEET_PROGRESS) || book.insertSheet(SHEET_PROGRESS);
+  if (progress.getLastRow() === 0) progress.appendRow(PROGRESS_HEADERS);
 
   const setting = book.getSheetByName(SHEET_SETTING) || book.insertSheet(SHEET_SETTING);
   if (setting.getLastRow() === 0) {
@@ -178,6 +186,106 @@ function epochOf_(examId) {
 function bumpEpoch_(examId) {
   const next = String(Number(epochOf_(examId)) + 1);
   cache_().put("epoch:" + examId, next, 21600);
+}
+
+function progress_(book, body) {
+  const examId = String(body.examId || "").trim();
+  const ver = String(body.ver || "").trim();
+  const klass = String(body.klass || "").trim();
+  const seat = String(body.seat || "").trim();
+  const client = String(body.client || "").trim();
+  const done = Math.max(0, Number(body.done) || 0);
+  const total = Math.max(0, Number(body.total) || 0);
+  if (!examId || !klass || !seat || !total) return { ok: false, error: "缺少資料" };
+
+  const sheet = book.getSheetByName(SHEET_PROGRESS);
+  const now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+  const row = [now, examId, ver, klass, seat, done, total, client];
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    const rows = sheet.getRange(2, 1, lastRow - 1, PROGRESS_HEADERS.length).getValues();
+    for (let index = 0; index < rows.length; index += 1) {
+      if (String(rows[index][1]) === examId && String(rows[index][3]) === klass && String(rows[index][4]) === seat) {
+        sheet.getRange(index + 2, 1, 1, PROGRESS_HEADERS.length).setValues([row]);
+        bumpEpoch_(examId);
+        return { ok: true, updated: true };
+      }
+    }
+  }
+  sheet.appendRow(row);
+  bumpEpoch_(examId);
+  return { ok: true, updated: false };
+}
+
+function board_(book, body) {
+  const check = guard_(book, body);
+  if (!check.ok) return { ok: false, error: "auth" };
+
+  const examId = String(body.examId || "").trim();
+  const ver = String(body.ver || "").trim();
+  const cacheKey = "board:" + epochOf_(examId) + ":" + examId + "|" + ver;
+  const cached = cache_().get(cacheKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.ok) return parsed;
+    } catch (error) {}
+  }
+
+  const sheet = book.getSheetByName(SHEET_PROGRESS);
+  const lastRow = sheet ? sheet.getLastRow() : 0;
+  if (lastRow < 2) {
+    const empty = { ok: true, percent: 0, done: 0, total: 0, students: [], started: 0, finished: 0 };
+    cache_().put(cacheKey, JSON.stringify(empty), BOARD_TTL);
+    return empty;
+  }
+
+  const rows = sheet.getRange(2, 1, lastRow - 1, PROGRESS_HEADERS.length).getValues();
+  const students = {};
+  rows.forEach(function (row) {
+    if (String(row[1]) !== examId) return;
+    if (ver && String(row[2]) !== ver) return;
+    const seat = String(row[4] || "");
+    if (!seat) return;
+    const key = String(row[3] || "") + "-" + seat;
+    students[key] = {
+      seat: seat,
+      done: Number(row[5]) || 0,
+      total: Number(row[6]) || 0
+    };
+  });
+
+  let done = 0;
+  let total = 0;
+  let started = 0;
+  let finished = 0;
+  const list = [];
+  Object.keys(students).forEach(function (key) {
+    const item = students[key];
+    done += item.done;
+    total += item.total;
+    if (item.done > 0) started += 1;
+    if (item.total > 0 && item.done >= item.total) finished += 1;
+    list.push({
+      seat: item.seat,
+      rate: item.total ? Math.round(item.done / item.total * 100) : 0
+    });
+  });
+  list.sort(function (left, right) {
+    return Number(left.seat) - Number(right.seat) || String(left.seat).localeCompare(String(right.seat));
+  });
+
+  const payload = {
+    ok: true,
+    percent: total ? Math.round(done / total * 100) : 0,
+    done: done,
+    total: total,
+    students: list,
+    started: started,
+    finished: finished
+  };
+  cache_().put(cacheKey, JSON.stringify(payload), BOARD_TTL);
+  return payload;
 }
 
 function sheetInfo_(book) {
@@ -320,6 +428,20 @@ function clear_(book, body) {
   if (lastRow > 1) report.getRange(2, 1, lastRow - 1, REPORT_HEADERS.length).clearContent();
   if (keep.length) {
     report.getRange(2, 1, keep.length, REPORT_HEADERS.length).setValues(keep);
+  }
+
+  const progress = book.getSheetByName(SHEET_PROGRESS);
+  if (progress && progress.getLastRow() > 1) {
+    const progressLast = progress.getLastRow();
+    const progressRows = progress.getRange(2, 1, progressLast - 1, PROGRESS_HEADERS.length).getValues();
+    const progressKeep = progressRows.filter(function (row) {
+      if (level === 3) return false;
+      return String(row[1]) !== examId;
+    });
+    progress.getRange(2, 1, progressLast - 1, PROGRESS_HEADERS.length).clearContent();
+    if (progressKeep.length) {
+      progress.getRange(2, 1, progressKeep.length, PROGRESS_HEADERS.length).setValues(progressKeep);
+    }
   }
 
   if (level === 2) {

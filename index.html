@@ -2494,6 +2494,183 @@
       color: var(--ink-primary);
     }
 
+    /* 進度版：墨龜賽跑 */
+    .progress-page {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .progress-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .progress-title {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      color: var(--ink-primary);
+    }
+
+    .progress-percent {
+      font-family: var(--font-serif);
+      font-size: 2.6rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--seal-red);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-stage {
+      position: relative;
+      padding: 46px 30px 30px;
+      border-radius: 16px;
+      border: 2px solid var(--paper-border);
+      background: linear-gradient(180deg, #FBF6EC 0%, #F2E8D7 100%);
+      box-shadow: inset 0 2px 0 #FFFFFF;
+    }
+
+    .progress-track {
+      position: relative;
+      height: 18px;
+      border-radius: 9px;
+      background: repeating-linear-gradient(90deg, #E8DCC7 0 14px, #F2E9DA 14px 28px);
+      box-shadow: inset 0 1px 2px rgba(35, 28, 22, 0.08);
+    }
+
+    .progress-fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      border-radius: 9px;
+      background: linear-gradient(90deg, #E7C88E, var(--seal-red));
+      transition: width 0.8s ease;
+    }
+
+    .progress-milestone {
+      position: absolute;
+      top: -10px;
+      width: 34px;
+      height: 34px;
+      margin-left: -17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 2px dashed var(--amber-border);
+      background: #FFFFFF;
+      color: var(--ink-muted);
+      font-size: 0.62rem;
+      font-variant-numeric: tabular-nums;
+      transition: all 0.3s ease;
+    }
+
+    .progress-milestone.hit {
+      background: var(--seal-red);
+      border-color: var(--seal-red);
+      border-style: solid;
+      color: #FFFFFF;
+      transform: scale(1.08);
+    }
+
+    .progress-turtle {
+      position: absolute;
+      top: -34px;
+      left: 0;
+      width: 68px;
+      height: 46px;
+      margin-left: -34px;
+      transition: left 0.8s ease;
+    }
+
+    .progress-turtle.hop {
+      animation: turtleHop 0.6s ease;
+    }
+
+    @keyframes turtleHop {
+      0% { transform: translateY(0); }
+      35% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+
+    .progress-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .progress-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #E4DCCB;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 1px 3px rgba(35, 28, 22, 0.18);
+      transition: background 0.4s ease;
+    }
+
+    .progress-dot.l1 { background: #EBD9B4; }
+    .progress-dot.l2 { background: #E0A96D; }
+    .progress-dot.l3 { background: #C9553F; }
+    .progress-dot.l4 { background: var(--seal-green); }
+
+    .progress-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .progress-toolbar .btn-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 0.82rem;
+    }
+
+    #viewProgress.progress-big .progress-percent {
+      font-size: 5rem;
+    }
+
+    #viewProgress.progress-big .progress-title {
+      font-size: 2rem;
+    }
+
+    #viewProgress.progress-big .progress-track {
+      height: 30px;
+    }
+
+    #viewProgress.progress-big .progress-turtle {
+      width: 110px;
+      height: 74px;
+      top: -52px;
+      margin-left: -55px;
+    }
+
+    #viewProgress.progress-big .progress-dot {
+      width: 34px;
+      height: 34px;
+    }
+
+    #viewProgress.progress-big .progress-toolbar {
+      display: none;
+    }
+
     .hotspot-meta {
       font-size: 0.75rem;
       color: var(--ink-muted);
@@ -3056,6 +3233,7 @@
               <button type="button" class="btn-chip" id="hotspotRefreshBtn" onclick="App.Hotspot.refresh()">更新<span class="hotspot-btn-time" id="hotspotUpdatedAt"></span></button>
               <button type="button" class="btn-chip" id="hotspotAutoBtn" onclick="App.Hotspot.toggleAuto()">自動更新：開</button>
             </div>
+            <button type="button" class="btn-chip" onclick="App.Hotspot.openBoard()">進度版</button>
             <button type="button" class="btn-chip hotspot-danger" onclick="App.Hotspot.openClearModal(1)">清空資料</button>
             <span id="hotspotSheetSlot"></span>
             <button type="button" class="btn-chip" onclick="App.showSetup()">回題號清單</button>
@@ -3067,6 +3245,51 @@
         <div class="hotspot-meta" id="hotspotMeta"></div>
         <div class="hotspot-state" id="hotspotState" style="display:none;"></div>
         <div class="hotspot-ranking" id="hotspotRanking"></div>
+      </div>
+    </section>
+
+    <!-- 畫面七：進度版（墨龜賽跑） -->
+    <section id="viewProgress" class="view-card">
+      <div class="progress-page">
+        <div class="progress-head">
+          <div>
+            <h2 class="progress-title">訂正進度・墨龜賽跑</h2>
+            <div class="progress-meta" id="progressMetaText">等待資料…</div>
+          </div>
+          <div class="progress-percent" id="progressPercent">0%</div>
+        </div>
+
+        <div class="progress-stage">
+          <div class="progress-track" id="progressTrack">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-milestone" data-at="25" style="left:25%">25</div>
+            <div class="progress-milestone" data-at="50" style="left:50%">50</div>
+            <div class="progress-milestone" data-at="75" style="left:75%">75</div>
+            <div class="progress-milestone" data-at="100" style="left:100%">100</div>
+            <div class="progress-turtle" id="progressTurtle">
+              <svg viewBox="0 0 96 64" width="100%" height="100%" aria-hidden="true">
+                <ellipse cx="44" cy="42" rx="30" ry="18" fill="#3E6B57"></ellipse>
+                <ellipse cx="44" cy="38" rx="22" ry="13" fill="#5C8F76"></ellipse>
+                <circle cx="78" cy="32" r="9" fill="#3E6B57"></circle>
+                <circle cx="81" cy="29" r="1.8" fill="#FFFFFF"></circle>
+                <rect x="22" y="54" width="12" height="8" rx="4" fill="#3E6B57"></rect>
+                <rect x="46" y="54" width="12" height="8" rx="4" fill="#3E6B57"></rect>
+                <circle cx="34" cy="26" r="4" fill="#3E6B57"></circle>
+                <circle cx="56" cy="26" r="4" fill="#3E6B57"></circle>
+                <path d="M30 40 q14 6 28 0" stroke="#2C4E3F" stroke-width="2" fill="none"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-dots" id="progressDots"></div>
+
+        <div class="progress-toolbar">
+          <button type="button" class="btn-chip" onclick="App.Hotspot.refreshBoard()">更新</button>
+          <button type="button" class="btn-chip" id="progressMuteBtn" onclick="App.Hotspot.toggleMute()">音效：開</button>
+          <button type="button" class="btn-chip" id="progressBigBtn" onclick="App.Hotspot.toggleBigMode()">投影大字</button>
+          <button type="button" class="btn-chip" onclick="App.Hotspot.openDashboard()">回統計頁</button>
+        </div>
       </div>
     </section>
 
@@ -3426,7 +3649,10 @@
         }
 
         // 背景自動回報本次錯題，不影響畫面流暢度
-        if (App.Hotspot) App.Hotspot.reportInBackground();
+        if (App.Hotspot) {
+          App.Hotspot.reportInBackground();
+          App.Hotspot.sendProgress();
+        }
 
         // 初始化 records
         AppState.selectedQIds.forEach(id => {
@@ -4459,6 +4685,7 @@
         if (document.getElementById("stampActionBtn").disabled) return;
         qRec.stamped = true;
         this.renderJumpInline();
+        if (App.Hotspot) App.Hotspot.sendProgress();
 
         document.getElementById("stampActionBtn").style.display = "none";
         const ind = document.getElementById("stampedIndicator");
@@ -5300,6 +5527,7 @@
       TIMEOUT_MS: 8000,
       RETRY_TIMES: 2,
       AUTO_MS: 60000,
+      BOARD_MS: 10000,
       SNAPSHOT_KEY: "exam-detective:hotspot:snapshot",
       AUTO_KEY: "exam-detective:hotspot:auto",
       DEDUPE_MS: 15000,
@@ -5424,6 +5652,209 @@
         const pad = (number) => String(number).padStart(2, "0");
         return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
           " " + pad(date.getHours()) + ":" + pad(date.getMinutes());
+      },
+
+      board: { percent: 0, done: 0, total: 0, students: [], started: 0, finished: 0, at: "" },
+      boardTimer: null,
+      boardBusy: false,
+      lastMilestone: 0,
+      muted: false,
+      bigMode: false,
+
+      sendProgress() {
+        const qids = AppState.selectedQIds || [];
+        const klass = this.normalizeText(AppState.studentClass);
+        const seat = this.normalizeText(AppState.studentSeat);
+        if (!qids.length || !klass || !seat) return;
+        const done = qids.filter((id) => AppState.records[id] && AppState.records[id].stamped).length;
+        const payload = {
+          action: "progress",
+          examId: this.examId,
+          ver: this.qbVersion,
+          klass: klass,
+          seat: seat,
+          done: done,
+          total: qids.length,
+          client: this.clientId()
+        };
+        if (!this.configured()) {
+          this.queueOutbox(payload);
+          return;
+        }
+        this.post(payload).then((result) => {
+          if (!result || !result.ok) this.queueOutbox(payload);
+        }).catch(() => {
+          this.queueOutbox(payload);
+        });
+      },
+
+      openBoard() {
+        if (!this.token) {
+          this.openAuthModal();
+          return;
+        }
+        App.showView("viewProgress");
+        this.fetchBoard();
+        this.startBoardPoll();
+      },
+
+      async fetchBoard(options) {
+        if (!this.token || this.boardBusy) return;
+        const silent = Boolean(options && options.silent);
+        this.boardBusy = true;
+        try {
+          const payload = {
+            action: "board",
+            token: this.token,
+            examId: this.examId,
+            ver: this.qbVersion
+          };
+          const result = silent ? await this.post(payload) : await this.postWithRetry(payload);
+          if (result && result.ok) {
+            this.board = {
+              percent: Number(result.percent) || 0,
+              done: Number(result.done) || 0,
+              total: Number(result.total) || 0,
+              students: Array.isArray(result.students) ? result.students : [],
+              started: Number(result.started) || 0,
+              finished: Number(result.finished) || 0,
+              at: new Date().toTimeString().slice(0, 8)
+            };
+            this.renderBoard();
+          } else if (result && result.error === "auth") {
+            this.clearToken();
+            AppState.teacherSession = false;
+            App.applyTeacherMode();
+            this.stopBoardPoll();
+            this.openAuthModal();
+            App.showToast("教師密碼已失效，請重新輸入。");
+          }
+        } catch (error) {
+        } finally {
+          this.boardBusy = false;
+        }
+      },
+
+      refreshBoard() {
+        this.fetchBoard();
+      },
+
+      startBoardPoll() {
+        this.stopBoardPoll();
+        this.boardTimer = setInterval(() => {
+          if (document.visibilityState === "hidden") return;
+          const active = document.querySelector(".view-card.active");
+          if (!active || active.id !== "viewProgress") return;
+          this.fetchBoard({ silent: true });
+        }, this.BOARD_MS);
+      },
+
+      stopBoardPoll() {
+        if (this.boardTimer !== null) clearInterval(this.boardTimer);
+        this.boardTimer = null;
+      },
+
+      rateLevel(rate) {
+        const value = Number(rate) || 0;
+        if (value >= 100) return 4;
+        if (value >= 67) return 3;
+        if (value >= 34) return 2;
+        if (value > 0) return 1;
+        return 0;
+      },
+
+      renderBoard() {
+        const percentEl = document.getElementById("progressPercent");
+        if (!percentEl) return;
+        const board = this.board;
+        percentEl.textContent = board.percent + "%";
+        const fill = document.getElementById("progressFill");
+        if (fill) fill.style.width = Math.max(0, Math.min(100, board.percent)) + "%";
+        const turtle = document.getElementById("progressTurtle");
+        if (turtle) turtle.style.left = Math.max(0, Math.min(100, board.percent)) + "%";
+
+        document.querySelectorAll("#progressTrack .progress-milestone").forEach((node) => {
+          const at = Number(node.dataset.at) || 0;
+          node.classList.toggle("hit", board.percent >= at);
+        });
+
+        const dots = document.getElementById("progressDots");
+        if (dots) {
+          dots.innerHTML = "";
+          board.students.forEach((student) => {
+            const dot = document.createElement("i");
+            const level = this.rateLevel(student.rate);
+            dot.className = "progress-dot" + (level ? " l" + level : "");
+            dot.title = level ? "已完成" : "尚未開始";
+            dots.appendChild(dot);
+          });
+        }
+
+        const meta = document.getElementById("progressMetaText");
+        if (meta) {
+          meta.textContent = "已完成 " + board.done + " / " + board.total + " 題・已開始 " +
+            board.started + " 人・全部完成 " + board.finished + " 人" +
+            (board.at ? "・更新 " + board.at : "");
+        }
+
+        const muteBtn = document.getElementById("progressMuteBtn");
+        if (muteBtn) muteBtn.textContent = this.muted ? "音效：關" : "音效：開";
+        const bigBtn = document.getElementById("progressBigBtn");
+        if (bigBtn) bigBtn.textContent = this.bigMode ? "回正常大小" : "投影大字";
+
+        if (board.percent > this.lastMilestone) {
+          const crossed = [25, 50, 75, 100].filter((at) => board.percent >= at && this.lastMilestone < at);
+          if (crossed.length) {
+            this.lastMilestone = crossed[crossed.length - 1];
+            this.playMilestone();
+          }
+        }
+      },
+
+      playMilestone() {
+        const turtle = document.getElementById("progressTurtle");
+        if (turtle) {
+          turtle.classList.remove("hop");
+          void turtle.offsetWidth;
+          turtle.classList.add("hop");
+        }
+        if (this.muted) return;
+        try {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return;
+          this._audio = this._audio || new Ctx();
+          const ctx = this._audio;
+          const now = ctx.currentTime;
+          [880, 1320].forEach((hz, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = hz;
+            const start = now + index * 0.14;
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(0.16, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.24);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.26);
+          });
+        } catch (error) {}
+      },
+
+      toggleMute() {
+        this.muted = !this.muted;
+        try {
+          window.localStorage.setItem("exam-detective:progress:mute", this.muted ? "1" : "0");
+        } catch (error) {}
+        this.renderBoard();
+      },
+
+      toggleBigMode() {
+        this.bigMode = !this.bigMode;
+        const view = document.getElementById("viewProgress");
+        if (view) view.classList.toggle("progress-big", this.bigMode);
+        this.renderBoard();
       },
 
       snapshotKey() {
@@ -6085,6 +6516,7 @@
       async logout() {
         const token = this.token;
         this.stopAuto();
+        this.stopBoardPoll();
         this.clearToken();
         AppState.teacherSession = false;
         if (App.applyTeacherMode) App.applyTeacherMode();
