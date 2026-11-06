@@ -38,8 +38,8 @@ function doPost(e) {
     const action = String(body.action || "");
     const book = SpreadsheetApp.getActiveSpreadsheet();
     if (!book) return json_({ ok: false, error: "找不到試算表，請以容器綁定方式建立腳本" });
-    ensureSheets_(book);
-    purgeExpiredTokens_(book);
+    ensureOnce_(book);
+    purgeOnce_(book);
 
     if (action === "report") return json_(report_(book, body));
     if (action === "auth") return json_(auth_(book, body.key));
@@ -53,7 +53,7 @@ function doPost(e) {
     if (action === "board") return json_(board_(book, body));
     if (action === "counts") return json_(counts_(book, body));
     if (action === "clear") return json_(clear_(book, body));
-    if (action === "info") return json_({ ok: true, ver: "hotspot-5" });
+    if (action === "info") return json_({ ok: true, ver: "hotspot-6" });
     return json_({ ok: false, error: "unknown-action" });
   } catch (error) {
     return json_({ ok: false, error: String((error && error.message) || error) });
@@ -61,7 +61,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, ver: "hotspot-5" });
+  return json_({ ok: true, ver: "hotspot-6" });
 }
 
 function json_(value) {
@@ -172,6 +172,18 @@ function logout_(book, token) {
   sheet.getRange(2, 1, rows.length, TOKEN_HEADERS.length).clearContent();
   if (keep.length) sheet.getRange(2, 1, keep.length, TOKEN_HEADERS.length).setValues(keep);
   return { ok: true };
+}
+
+function ensureOnce_(book) {
+  if (cache_().get("init:ok")) return;
+  ensureSheets_(book);
+  cache_().put("init:ok", "1", 21600);
+}
+
+function purgeOnce_(book) {
+  if (cache_().get("purge:ok")) return;
+  purgeExpiredTokens_(book);
+  cache_().put("purge:ok", "1", 600);
 }
 
 function cache_() {

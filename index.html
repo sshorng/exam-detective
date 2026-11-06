@@ -2714,6 +2714,16 @@
       border-color: var(--seal-green);
     }
 
+    .lane-flag {
+      position: absolute;
+      right: -6px;
+      top: -17px;
+      width: 19px;
+      height: 19px;
+      color: var(--seal-green);
+      filter: drop-shadow(0 1px 1px rgba(35, 28, 22, 0.25));
+    }
+
     .progress-lane.empty .lane-head {
       display: none;
     }
@@ -5686,6 +5696,7 @@
       AUTO_MS: 60000,
       BOARD_MS: 10000,
       BOARD_KLASS_KEY: "exam-detective:progress:klass",
+      BOARD_SNAPSHOT_KEY: "exam-detective:progress:board",
       SNAPSHOT_KEY: "exam-detective:hotspot:snapshot",
       AUTO_KEY: "exam-detective:hotspot:auto",
       DEDUPE_MS: 15000,
@@ -5814,6 +5825,7 @@
 
       board: { percent: 0, done: 0, total: 0, students: [], started: 0, finished: 0, at: "" },
       boardKlass: "",
+      boardSignature: "",
       klassList: [],
       boardTimer: null,
       boardBusy: false,
@@ -5848,6 +5860,41 @@
         });
       },
 
+      boardSnapshotKey() {
+        return this.BOARD_SNAPSHOT_KEY + ":" + this.examId + ":" + this.qbVersion + ":" + (this.boardKlass || "all");
+      },
+
+      loadBoardSnapshot() {
+        try {
+          const raw = window.localStorage.getItem(this.boardSnapshotKey());
+          if (!raw) return null;
+          const saved = JSON.parse(raw);
+          return saved && typeof saved === "object" ? saved : null;
+        } catch (error) {
+          return null;
+        }
+      },
+
+      saveBoardSnapshot() {
+        try {
+          window.localStorage.setItem(this.boardSnapshotKey(), JSON.stringify({
+            board: this.board,
+            klassList: this.klassList,
+            at: this.board.at
+          }));
+        } catch (error) {}
+      },
+
+      restoreBoardSnapshot() {
+        const saved = this.loadBoardSnapshot();
+        if (!saved || !saved.board) return false;
+        this.board = saved.board;
+        this.klassList = Array.isArray(saved.klassList) ? saved.klassList : [];
+        this.boardSignature = "";
+        this.renderBoard();
+        return true;
+      },
+
       openBoard() {
         if (!this.token) {
           this.openAuthModal();
@@ -5859,7 +5906,8 @@
           this.boardKlass = "";
         }
         App.showView("viewProgress");
-        this.fetchBoard();
+        this.restoreBoardSnapshot();
+        this.fetchBoard({ silent: true });
         this.startBoardPoll();
       },
 
@@ -5888,6 +5936,7 @@
               at: new Date().toTimeString().slice(0, 8)
             };
             this.renderBoard();
+            this.saveBoardSnapshot();
           } else if (result && result.error === "auth") {
             this.clearToken();
             AppState.teacherSession = false;
@@ -5912,9 +5961,11 @@
           window.localStorage.setItem(this.BOARD_KLASS_KEY, this.boardKlass);
         } catch (error) {}
         this.lastMilestone = 0;
+        this.boardSignature = "";
         this.board = { percent: 0, done: 0, total: 0, students: [], started: 0, finished: 0, at: "" };
+        this.restoreBoardSnapshot();
         this.renderBoard();
-        this.fetchBoard();
+        this.fetchBoard({ silent: true });
       },
 
       renderKlassPicker() {
@@ -5969,6 +6020,15 @@
         const percentEl = document.getElementById("progressPercent");
         if (!percentEl) return;
         const board = this.board;
+        const signature = JSON.stringify([
+          board.percent, board.done, board.total, board.started, board.finished,
+          board.students, this.klassList, this.boardKlass
+        ]);
+        if (signature === this.boardSignature) {
+          this.renderBoardMeta();
+          return;
+        }
+        this.boardSignature = signature;
         percentEl.textContent = board.percent + "%";
         const fill = document.getElementById("progressFill");
         if (fill) fill.style.width = Math.max(0, Math.min(100, board.percent)) + "%";
@@ -6013,6 +6073,12 @@
             head.style.left = rate + "%";
             track.appendChild(fill);
             track.appendChild(head);
+            if (rate >= 100) {
+              const flag = document.createElement("span");
+              flag.className = "lane-flag";
+              flag.innerHTML = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"></path><path d="M6 5h11l-2 4 2 4H6"></path></svg>';
+              track.appendChild(flag);
+            }
             lane.appendChild(seat);
             lane.appendChild(track);
             students.appendChild(lane);
@@ -6020,16 +6086,7 @@
         }
 
         this.renderKlassPicker();
-
-        const meta = document.getElementById("progressMetaText");
-        if (meta) {
-          const scope = this.boardKlass ? "班級 " + this.boardKlass : "全部班級";
-          const head = board.students.length
-            ? scope + "・已完成 " + board.done + " / " + board.total + " 題・已開始 " + board.started +
-              " 人・全部完成 " + board.finished + " 人"
-            : scope + "・尚無進度資料";
-          meta.textContent = head + (board.at ? "・更新 " + board.at : "");
-        }
+        this.renderBoardMeta();
 
         const muteBtn = document.getElementById("progressMuteBtn");
         if (muteBtn) muteBtn.textContent = this.muted ? "音效：關" : "音效：開";
@@ -6043,6 +6100,18 @@
             this.playMilestone();
           }
         }
+      },
+
+      renderBoardMeta() {
+        const meta = document.getElementById("progressMetaText");
+        if (!meta) return;
+        const board = this.board;
+        const scope = this.boardKlass ? "班級 " + this.boardKlass : "全部班級";
+        const head = board.students.length
+          ? scope + "・已完成 " + board.done + " / " + board.total + " 題・已開始 " + board.started +
+            " 人・全部完成 " + board.finished + " 人"
+          : scope + "・尚無進度資料";
+        meta.textContent = head + (board.at ? "・更新 " + board.at : "");
       },
 
       playMilestone() {
