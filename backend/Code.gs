@@ -23,6 +23,7 @@ const SHEET_SETTING = "設定";
 const SHEET_TOKEN = "權杖";
 const DEDUPE_MS = 10000;
 const TOKEN_DAYS = 90;
+const CACHE_TTL = 30;
 const REPORT_HEADERS = ["時間", "批次", "考卷", "版本", "班級", "座號", "題號", "客戶端"];
 const HISTORY_HEADERS = ["清空時間", "層級", "時間", "批次", "考卷", "版本", "班級", "座號", "題號", "客戶端"];
 const TOKEN_HEADERS = ["權杖", "到期時間", "建立時間"];
@@ -47,7 +48,7 @@ function doPost(e) {
     }
     if (action === "counts") return json_(counts_(book, body));
     if (action === "clear") return json_(clear_(book, body));
-    if (action === "info") return json_({ ok: true, ver: "hotspot-3" });
+    if (action === "info") return json_({ ok: true, ver: "hotspot-4" });
     return json_({ ok: false, error: "unknown-action" });
   } catch (error) {
     return json_({ ok: false, error: String((error && error.message) || error) });
@@ -55,7 +56,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, ver: "hotspot-3" });
+  return json_({ ok: true, ver: "hotspot-4" });
 }
 
 function json_(value) {
@@ -165,6 +166,20 @@ function logout_(book, token) {
   return { ok: true };
 }
 
+function cache_() {
+  return CacheService.getScriptCache();
+}
+
+function epochOf_(examId) {
+  const saved = cache_().get("epoch:" + examId);
+  return saved || "1";
+}
+
+function bumpEpoch_(examId) {
+  const next = String(Number(epochOf_(examId)) + 1);
+  cache_().put("epoch:" + examId, next, 21600);
+}
+
 function sheetInfo_(book) {
   return { ok: true, title: book.getName(), url: book.getUrl() };
 }
@@ -205,6 +220,7 @@ function report_(book, body) {
   });
   if (!rows.length) return { ok: true, added: 0 };
   report.getRange(report.getLastRow() + 1, 1, rows.length, REPORT_HEADERS.length).setValues(rows);
+  bumpEpoch_(examId);
   return { ok: true, added: rows.length };
 }
 
@@ -215,6 +231,15 @@ function counts_(book, body) {
   const examId = String(body.examId || "").trim();
   const ver = String(body.ver || "").trim();
   const klassFilter = String(body.klass || "").trim();
+  const cacheKey = "counts:" + epochOf_(examId) + ":" + examId + "|" + ver + "|" + klassFilter;
+  const cached = cache_().get(cacheKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.ok) return parsed;
+    } catch (error) {}
+  }
+
   const report = book.getSheetByName(SHEET_REPORT);
   const lastRow = report.getLastRow();
   if (lastRow < 2) return { ok: true, counts: {}, total: 0, klassCounts: {}, roster: [], since: "", sheetUrl: book.getUrl() };
@@ -248,7 +273,7 @@ function counts_(book, body) {
     klassCounts[name] = Object.keys(klassBatches[name]).length;
   });
 
-  return {
+  const payload = {
     ok: true,
     counts: counts,
     total: Object.keys(batches).length,
@@ -257,6 +282,8 @@ function counts_(book, body) {
     since: since,
     sheetUrl: book.getUrl()
   };
+  cache_().put(cacheKey, JSON.stringify(payload), CACHE_TTL);
+  return payload;
 }
 
 function clear_(book, body) {
@@ -309,5 +336,6 @@ function clear_(book, body) {
     }
   }
 
+  bumpEpoch_(examId);
   return { ok: true, archived: archived.length, level: level, since: now };
 }

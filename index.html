@@ -2427,6 +2427,12 @@
       color: var(--ink-primary);
     }
 
+    .hotspot-updated {
+      font-size: 0.74rem;
+      color: var(--ink-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
     .hotspot-meta {
       font-size: 0.75rem;
       color: var(--ink-muted);
@@ -2986,6 +2992,8 @@
               <option value="">全部班級</option>
             </select>
             <button type="button" class="btn-chip" onclick="App.Hotspot.refresh()">更新</button>
+            <button type="button" class="btn-chip" id="hotspotAutoBtn" onclick="App.Hotspot.toggleAuto()">自動更新：開</button>
+            <span class="hotspot-updated" id="hotspotUpdatedAt"></span>
             <button type="button" class="btn-chip" onclick="App.Hotspot.logout()">登出</button>
             <button type="button" class="btn-chip" onclick="App.Hotspot.openClearModal(1)">清空本卷目前資料</button>
             <button type="button" class="btn-chip" onclick="App.Hotspot.openClearModal(2)">清空本卷含歷史</button>
@@ -5231,6 +5239,9 @@
       SHEET_KEY: "exam-detective:hotspot:sheet",
       TIMEOUT_MS: 8000,
       RETRY_TIMES: 2,
+      AUTO_MS: 60000,
+      SNAPSHOT_KEY: "exam-detective:hotspot:snapshot",
+      AUTO_KEY: "exam-detective:hotspot:auto",
       DEDUPE_MS: 15000,
 
       // --- STATE ----------------------------------------------------
@@ -5248,6 +5259,12 @@
       lastSignature: "",
       lastSignatureAt: 0,
       pendingClearLevel: 1,
+      autoEnabled: true,
+      fetching: false,
+      autoTimer: null,
+      lastFetchAt: "",
+      lastFetchMs: 0,
+      renderSignature: "",
 
       // --- PURE ENGINE ---------------------------------------------
       hashString(seed) {
@@ -5339,6 +5356,76 @@
           const result = await this.postWithRetry({ action: "sheetinfo", token: this.token });
           if (result && result.ok) this.applySheetUrl(result.url);
         } catch (error) {}
+      },
+
+      snapshotKey() {
+        return this.SNAPSHOT_KEY + ":" + this.examId + ":" + this.qbVersion;
+      },
+
+      loadSnapshot() {
+        try {
+          const raw = window.localStorage.getItem(this.snapshotKey());
+          if (!raw) return null;
+          const saved = JSON.parse(raw);
+          if (!saved || typeof saved !== "object") return null;
+          return saved;
+        } catch (error) {
+          return null;
+        }
+      },
+
+      saveSnapshot() {
+        try {
+          window.localStorage.setItem(this.snapshotKey(), JSON.stringify({
+            counts: this.counts,
+            total: this.total,
+            klassCounts: this.klassCounts,
+            since: this.since,
+            at: this.lastFetchAt
+          }));
+        } catch (error) {}
+      },
+
+      startAuto() {
+        this.stopAuto();
+        if (!this.autoEnabled || !this.token) return;
+        this.autoTimer = setInterval(() => {
+          if (document.visibilityState === "hidden") return;
+          const active = document.querySelector(".view-card.active");
+          if (!active || active.id !== "viewHotspot") return;
+          if (!this.token) return;
+          this.refresh({ silent: true });
+        }, this.AUTO_MS);
+      },
+
+      stopAuto() {
+        if (this.autoTimer !== null) clearInterval(this.autoTimer);
+        this.autoTimer = null;
+      },
+
+      toggleAuto() {
+        this.autoEnabled = !this.autoEnabled;
+        try {
+          window.localStorage.setItem(this.AUTO_KEY, this.autoEnabled ? "1" : "0");
+        } catch (error) {}
+        if (this.autoEnabled) this.startAuto();
+        else this.stopAuto();
+        this.renderAutoState();
+        App.showToast(this.autoEnabled ? "已開啟自動更新，每 60 秒只抓變動資料。" : "已關閉自動更新。");
+      },
+
+      renderAutoState() {
+        const button = document.getElementById("hotspotAutoBtn");
+        if (button) {
+          button.textContent = this.autoEnabled ? "自動更新：開" : "自動更新：關";
+          button.classList.toggle("on", this.autoEnabled);
+        }
+        const label = document.getElementById("hotspotUpdatedAt");
+        if (label) {
+          label.textContent = this.lastFetchAt
+            ? "上次更新 " + this.lastFetchAt + "（" + this.lastFetchMs + " 毫秒）"
+            : "";
+        }
       },
 
       clearHint(level) {
@@ -5564,25 +5651,46 @@
       openDashboard() {
         AppState.teacherMode = false;
         App.showView("viewHotspot");
-        this.refresh();
+        const snapshot = this.loadSnapshot();
+        if (snapshot && snapshot.counts) {
+          this.counts = snapshot.counts;
+          this.total = Number(snapshot.total) || 0;
+          this.klassCounts = snapshot.klassCounts || {};
+          this.since = snapshot.since || "";
+          this.lastFetchAt = snapshot.at || "";
+          this.lastFetchMs = 0;
+          this.renderSignature = "";
+          this.renderDashboard();
+        }
+        this.refresh({ silent: true });
+        this.startAuto();
       },
 
-      async refresh() {
+      async refresh(options) {
         if (!this.token) {
           this.openAuthModal();
           return;
         }
-        this.loading = true;
-        this.error = "";
-        this.renderDashboard();
+        const silent = Boolean(options && options.silent);
+        if (this.fetching) return;
+        this.fetching = true;
+        if (!silent) {
+          this.loading = true;
+          this.error = "";
+          this.renderDashboard();
+        }
+        const started = performance.now();
         try {
-          const result = await this.postWithRetry({
+          const payload = {
             action: "counts",
             token: this.token,
             examId: this.examId,
             ver: this.qbVersion,
             klass: this.klassFilter
-          });
+          };
+          const result = silent ? await this.post(payload) : await this.postWithRetry(payload);
+          this.lastFetchMs = Math.round(performance.now() - started);
+          this.lastFetchAt = new Date().toTimeString().slice(0, 8);
           if (result && result.ok) {
             this.counts = result.counts || {};
             this.total = Number(result.total) || 0;
@@ -5602,8 +5710,10 @@
         } catch (error) {
           this.error = "連線失敗，請確認網路後再按更新。";
         } finally {
+          this.fetching = false;
           this.loading = false;
           this.renderDashboard();
+          this.saveSnapshot();
         }
       },
 
@@ -5611,6 +5721,16 @@
         const list = document.getElementById("hotspotRanking");
         const tiles = document.getElementById("hotspotTiles");
         if (!list || !tiles) return;
+
+        const signature = JSON.stringify([
+          this.counts, this.total, this.klassCounts, this.since,
+          this.loading, this.error, this.klassFilter
+        ]);
+        if (signature === this.renderSignature) {
+          this.renderAutoState();
+          return;
+        }
+        this.renderSignature = signature;
 
         tiles.innerHTML = "";
         [
@@ -5731,6 +5851,7 @@
       },
 
       renderSheetLink() {
+        this.renderAutoState();
         const holder = document.getElementById("hotspotSheetSlot");
         if (!holder) return;
         holder.innerHTML = "";
@@ -5891,6 +6012,7 @@
 
       async logout() {
         const token = this.token;
+        this.stopAuto();
         this.clearToken();
         AppState.teacherSession = false;
         if (App.applyTeacherMode) App.applyTeacherMode();
@@ -5912,6 +6034,12 @@
       // --- 初始化 ---------------------------------------------------
       init() {
         this.examId = this.buildExamId();
+        try {
+          const savedAuto = window.localStorage.getItem(this.AUTO_KEY);
+          this.autoEnabled = savedAuto !== "0";
+        } catch (error) {
+          this.autoEnabled = true;
+        }
         if (this.readToken()) {
           AppState.teacherSession = true;
           setTimeout(() => { if (App.applyTeacherMode) App.applyTeacherMode(); }, 0);

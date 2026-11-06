@@ -42,14 +42,14 @@
 | `counts` | 取回報統計 | 需要 |
 | `clear` | 三層清空（先歸檔） | 需要 |
 | `sheetinfo` | 回報試算表名稱與網址，供統計頁的試算表圖示使用 | 需要 |
-| `info` | 健康檢查，回 `{"ok":true,"ver":"hotspot-3"}` | 不需要 |
+| `info` | 健康檢查，回 `{"ok":true,"ver":"hotspot-4"}` | 不需要 |
 
 ## 驗證後端是否活著
 
 在瀏覽器打開 `/exec` 網址，看到下面這段就代表部署成功：
 
 ```json
-{"ok":true,"ver":"hotspot-3"}
+{"ok":true,"ver":"hotspot-4"}
 ```
 
 ## 常見問題
