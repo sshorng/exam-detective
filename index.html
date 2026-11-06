@@ -2948,6 +2948,7 @@
         </svg>
         <span>錯題熱點</span>
       </button>
+      <span id="progressEntryWrap" style="display:none;"><button type="button" class="btn-qr-project" onclick="App.Hotspot.openBoard()" title="教師專用：訂正進度看板"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 5-7 4 4"></path><path d="M3 21h18"></path></svg><span>進度版</span></button></span>
       <button type="button" class="btn-qr-project" onclick="App.openQrModal()" title="開啟學生掃碼投影畫面（大螢幕專用）">
         <svg class="qr-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="7"></rect>
@@ -3238,7 +3239,6 @@
               <button type="button" class="btn-chip" id="hotspotRefreshBtn" onclick="App.Hotspot.refresh()">更新<span class="hotspot-btn-time" id="hotspotUpdatedAt"></span></button>
               <button type="button" class="btn-chip" id="hotspotAutoBtn" onclick="App.Hotspot.toggleAuto()">自動更新：開</button>
             </div>
-            <button type="button" class="btn-chip" onclick="App.Hotspot.openBoard()">進度版</button>
             <button type="button" class="btn-chip hotspot-danger" onclick="App.Hotspot.openClearModal(1)">清空資料</button>
             <span id="hotspotSheetSlot"></span>
             <button type="button" class="btn-chip" onclick="App.showSetup()">回題號清單</button>
@@ -3691,6 +3691,8 @@
         const chip = document.getElementById("teacherModeChip");
         const signedIn = Boolean(AppState.teacherSession);
         if (chip) chip.classList.toggle("on", on || signedIn);
+        const progressEntry = document.getElementById("progressEntryWrap");
+        if (progressEntry) progressEntry.style.display = signedIn ? "inline-flex" : "none";
         const countLabel = document.getElementById("selectedCountLabel");
         if (countLabel) {
           countLabel.textContent = signedIn
