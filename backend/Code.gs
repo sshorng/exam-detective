@@ -66,7 +66,12 @@ function doPost(e) {
     if (action === "board") return json_(board_(book, body));
     if (action === "counts") return json_(counts_(book, body));
     if (action === "clear") return json_(clear_(book, body));
-    if (action === "info") return json_({ ok: true, ver: "hotspot-8" });
+    if (action === "migrate") {
+      const migrateCheck = guard_(book, body);
+      if (!migrateCheck.ok) return json_({ ok: false, error: "auth" });
+      return json_(migrate_(book, body));
+    }
+    if (action === "info") return json_({ ok: true, ver: "hotspot-9" });
     return json_({ ok: false, error: "unknown-action" });
   } catch (error) {
     return json_({ ok: false, error: String((error && error.message) || error) });
@@ -74,7 +79,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, ver: "hotspot-8" });
+  return json_({ ok: true, ver: "hotspot-9" });
 }
 
 function json_(value) {
@@ -549,4 +554,127 @@ function clear_(book, body) {
 
   bumpEpoch_(examId);
   return { ok: true, archived: archived.length, level: level, since: now };
+}
+
+// --- 一次性整理：把舊資料轉成現在的去重規則 ------------------------------------
+// 在試算表用選單「考場抓鬼大師 → 整理資料」執行，或呼叫 doPost 的 migrate（需教師權杖）。
+function migrate_(book, body) {
+  const dryRun = !body || body.dryRun !== false;
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd_HHmmss");
+  const result = {
+    ok: true,
+    dryRun: dryRun,
+    report: { total: 0, keep: 0, drop: 0, backup: "" },
+    progress: { total: 0, keep: 0, drop: 0, backup: "" }
+  };
+
+  const report = book.getSheetByName(SHEET_REPORT);
+  if (report && report.getLastRow() > 1) {
+    const rows = report.getRange(2, 1, report.getLastRow() - 1, REPORT_HEADERS.length).getValues();
+    const seen = {};
+    const keep = [];
+    rows.forEach(function (row) {
+      const qid = String(row[6] || "").trim();
+      if (!qid) {
+        keep.push(row);
+        return;
+      }
+      const key = [String(row[2] || ""), String(row[3] || ""), String(row[7] || ""), qid].join("|");
+      if (seen[key]) return;
+      seen[key] = true;
+      keep.push(row);
+    });
+    result.report.total = rows.length;
+    result.report.keep = keep.length;
+    result.report.drop = rows.length - keep.length;
+    if (!dryRun && result.report.drop > 0) {
+      result.report.backup = backupSheet_(book, report, SHEET_REPORT + "_備份_" + stamp);
+      report.getRange(2, 1, rows.length, REPORT_HEADERS.length).setValues(keep);
+      report.deleteRows(keep.length + 2, result.report.drop);
+    }
+  }
+
+  const progress = book.getSheetByName(SHEET_PROGRESS);
+  if (progress && progress.getLastRow() > 1) {
+    const rows = progress.getRange(2, 1, progress.getLastRow() - 1, PROGRESS_HEADERS.length).getValues();
+    const map = {};
+    const order = [];
+    rows.forEach(function (row) {
+      const examId = String(row[1] || "").trim();
+      const klass = squash_(row[3]);
+      const seat = squashSeat_(row[4]);
+      if (!examId || !klass || !seat) return;
+      const key = examId + "|" + klass + "|" + seat;
+      const candidate = [row[0], examId, row[2], klass, seat, Number(row[5]) || 0, Number(row[6]) || 0, row[7]];
+      const prev = map[key];
+      if (!prev) {
+        map[key] = candidate;
+        order.push(key);
+        return;
+      }
+      const prevTotal = Number(prev[6]) || 0;
+      const nextTotal = Number(candidate[6]) || 0;
+      const prevRate = prevTotal ? (Number(prev[5]) || 0) / prevTotal : 0;
+      const nextRate = nextTotal ? (Number(candidate[5]) || 0) / nextTotal : 0;
+      if (nextRate > prevRate || (nextRate === prevRate && String(candidate[0] || "") >= String(prev[0] || ""))) {
+        map[key] = candidate;
+      }
+    });
+    const keep = order.map(function (key) { return map[key]; });
+    result.progress.total = rows.length;
+    result.progress.keep = keep.length;
+    result.progress.drop = rows.length - keep.length;
+    if (!dryRun && result.progress.drop > 0) {
+      result.progress.backup = backupSheet_(book, progress, SHEET_PROGRESS + "_備份_" + stamp);
+      progress.getRange(2, 1, rows.length, PROGRESS_HEADERS.length).setValues(keep);
+      progress.deleteRows(keep.length + 2, result.progress.drop);
+      const exams = {};
+      keep.forEach(function (row) { exams[String(row[1] || "")] = true; });
+      Object.keys(exams).forEach(function (id) { if (id) bumpEpoch_(id); });
+    }
+  }
+
+  return result;
+}
+
+function backupSheet_(book, sheet, name) {
+  const copy = sheet.copyTo(book);
+  copy.setName(name);
+  return name;
+}
+
+function migrateHint_(result) {
+  const lines = [
+    "回報表：現有 " + result.report.total + " 列，整理後保留 " + result.report.keep + " 列，刪除 " + result.report.drop + " 列",
+    "進度表：現有 " + result.progress.total + " 列，整理後保留 " + result.progress.keep + " 列，刪除 " + result.progress.drop + " 列"
+  ];
+  if (result.dryRun) lines.push("（試跑，未改動任何資料）");
+  else lines.push("已先複製備份表，再完成整理。");
+  return lines.join("\n");
+}
+
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu("考場抓鬼大師")
+      .addItem("整理資料（試跑，不改動）", "uiMigrateDryRun")
+      .addItem("整理資料（實際執行）", "uiMigrateRun")
+      .addToUi();
+  } catch (error) {}
+}
+
+function uiMigrateDryRun() {
+  const ui = SpreadsheetApp.getUi();
+  const result = migrate_(SpreadsheetApp.getActiveSpreadsheet(), { dryRun: true });
+  ui.alert("整理試跑", migrateHint_(result), ui.ButtonSet.OK);
+}
+
+function uiMigrateRun() {
+  const book = SpreadsheetApp.getActiveSpreadsheet();
+  const ui = SpreadsheetApp.getUi();
+  const preview = migrate_(book, { dryRun: true });
+  const answer = ui.alert("整理資料", migrateHint_(preview) + "\n\n會先複製備份表，確定執行嗎？", ui.ButtonSet.YES_NO);
+  if (answer !== ui.Button.YES) return;
+  const result = migrate_(book, { dryRun: false });
+  ui.alert("整理完成", migrateHint_(result), ui.ButtonSet.OK);
 }
