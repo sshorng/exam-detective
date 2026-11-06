@@ -1,0 +1,9 @@
+# Google Drive 捷徑與暫存檔，不要進版控
+*.gsheet
+*.gdoc
+*.gslides
+*.gform
+*.gscript
+~$*
+Thumbs.db
+.DS_Store
