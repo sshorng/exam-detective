@@ -1316,6 +1316,10 @@
     }
 
     /* 導覽切換列 */
+    .desk-title.ink-entry {
+      cursor: pointer;
+    }
+
     .teacher-mode-chip {
       display: none;
       align-items: center;
@@ -3169,6 +3173,10 @@
       },
 
       toggleQ(id) {
+        if (AppState.teacherSession && App.Hotspot) {
+          App.Hotspot.jumpToQuestion(id);
+          return;
+        }
         const idx = AppState.selectedQIds.indexOf(id);
         if (idx > -1) {
           AppState.selectedQIds.splice(idx, 1);
@@ -3270,7 +3278,14 @@
         const qid = document.getElementById("teacherModeQid");
         if (qid) qid.textContent = on ? "第 " + (AppState.activeQId || 0) + " 題" : "";
         const chip = document.getElementById("teacherModeChip");
-        if (chip) chip.classList.toggle("on", on || Boolean(AppState.teacherSession));
+        const signedIn = Boolean(AppState.teacherSession);
+        if (chip) chip.classList.toggle("on", on || signedIn);
+        const countLabel = document.getElementById("selectedCountLabel");
+        if (countLabel) {
+          countLabel.textContent = signedIn
+            ? "（教師模式：點題號直接進入該題）"
+            : "（已選 " + AppState.selectedQIds.length + " 題）";
+        }
         const stepText = document.querySelector("#viewInvestigate .step-banner span:last-child");
         if (stepText) {
           stepText.textContent = on
@@ -4540,36 +4555,19 @@
       bindEntry() {
         const title = document.querySelector(".desk-title");
         if (!title) return;
-        let timer = null;
-        let startX = 0;
-        let startY = 0;
-        const cancel = () => {
-          if (timer !== null) clearTimeout(timer);
-          timer = null;
-        };
-        title.addEventListener("pointerdown", (event) => {
-          if (this.active) return;
-          startX = event.clientX;
-          startY = event.clientY;
-          cancel();
-          timer = setTimeout(() => {
-            timer = null;
-            this.enable();
-          }, this.HOLD_MS);
-        });
-        title.addEventListener("pointermove", (event) => {
-          if (timer === null) return;
-          if (Math.abs(event.clientX - startX) > 12 || Math.abs(event.clientY - startY) > 12) cancel();
-        });
-        ["pointerup", "pointercancel", "pointerleave"].forEach((type) => title.addEventListener(type, cancel));
-        title.addEventListener("contextmenu", (event) => {
-          if (timer !== null) event.preventDefault();
+        title.classList.add("ink-entry");
+        title.addEventListener("click", (event) => {
+          if (!AppState.teacherSession) return;
+          event.preventDefault();
+          if (this.active) this.disable();
+          else this.enable();
         });
       },
 
       bindKeys() {
         document.addEventListener("keydown", (event) => {
           if (event.altKey && event.ctrlKey && String(event.key).toLowerCase() === "p") {
+            if (!AppState.teacherSession) return;
             event.preventDefault();
             if (this.active) this.disable();
             else this.enable();
@@ -5531,7 +5529,6 @@
           jump.className = "hotspot-qid";
           jump.textContent = "第 " + row.qid + " 題";
           jump.title = "跳到第 " + row.qid + " 題檢討";
-          jump.addEventListener("click", () => this.jumpToQuestion(row.qid));
 
           const tag = document.createElement("span");
           tag.className = "hotspot-tag";
@@ -5555,6 +5552,9 @@
           body.appendChild(bar);
           card.appendChild(rank);
           card.appendChild(body);
+          card.style.cursor = "pointer";
+          card.title = "點這一列跳到第 " + row.qid + " 題檢討";
+          card.addEventListener("click", () => this.jumpToQuestion(row.qid));
           list.appendChild(card);
         });
       },
