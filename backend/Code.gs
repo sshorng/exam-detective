@@ -14,14 +14,18 @@
  *   回報：時間、批次、考卷、版本、班級、座號、題號、客戶端
  *   歷史：清空時間、層級、時間、批次、考卷、版本、班級、座號、題號、客戶端
  *   設定：B1 教師密碼（首次自動產生 8 碼隨機值，可自行修改）
+ *   權杖：教師登入權杖、到期時間、建立時間（登入一次可持續使用，逾期自動失效）
  */
 
 const SHEET_REPORT = "回報";
 const SHEET_HISTORY = "歷史";
 const SHEET_SETTING = "設定";
+const SHEET_TOKEN = "權杖";
 const DEDUPE_MS = 10000;
+const TOKEN_DAYS = 90;
 const REPORT_HEADERS = ["時間", "批次", "考卷", "版本", "班級", "座號", "題號", "客戶端"];
 const HISTORY_HEADERS = ["清空時間", "層級", "時間", "批次", "考卷", "版本", "班級", "座號", "題號", "客戶端"];
+const TOKEN_HEADERS = ["權杖", "到期時間", "建立時間"];
 
 function doPost(e) {
   try {
@@ -31,12 +35,14 @@ function doPost(e) {
     const book = SpreadsheetApp.getActiveSpreadsheet();
     if (!book) return json_({ ok: false, error: "找不到試算表，請以容器綁定方式建立腳本" });
     ensureSheets_(book);
+    purgeExpiredTokens_(book);
 
     if (action === "report") return json_(report_(book, body));
     if (action === "auth") return json_(auth_(book, body.key));
+    if (action === "logout") return json_(logout_(book, body.token));
     if (action === "counts") return json_(counts_(book, body));
     if (action === "clear") return json_(clear_(book, body));
-    if (action === "info") return json_({ ok: true, ver: "hotspot-1" });
+    if (action === "info") return json_({ ok: true, ver: "hotspot-2" });
     return json_({ ok: false, error: "unknown-action" });
   } catch (error) {
     return json_({ ok: false, error: String((error && error.message) || error) });
@@ -44,7 +50,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, ver: "hotspot-1" });
+  return json_({ ok: true, ver: "hotspot-2" });
 }
 
 function json_(value) {
@@ -58,25 +64,38 @@ function ensureSheets_(book) {
   const history = book.getSheetByName(SHEET_HISTORY) || book.insertSheet(SHEET_HISTORY);
   if (history.getLastRow() === 0) history.appendRow(HISTORY_HEADERS);
 
+  const tokens = book.getSheetByName(SHEET_TOKEN) || book.insertSheet(SHEET_TOKEN);
+  if (tokens.getLastRow() === 0) tokens.appendRow(TOKEN_HEADERS);
+
   const setting = book.getSheetByName(SHEET_SETTING) || book.insertSheet(SHEET_SETTING);
   if (setting.getLastRow() === 0) {
     setting.getRange("A1").setValue("教師密碼");
-    setting.getRange("B1").setValue(randomPassword_());
+    setting.getRange("B1").setValue(randomSecret_(8));
     setting.getRange("A4").setValue("說明");
     setting.getRange("A5").setValue("B1 是教師密碼，可自行修改；修改後網頁需重新輸入一次。");
-    setting.getRange("A6").setValue("密碼只在此工作表，網頁與前端程式都不保存明文。");
-    setting.setColumnWidth(1, 120);
+    setting.getRange("A6").setValue("密碼只在試算表，網頁與前端程式都不保存明文。");
+    setting.getRange("A7").setValue("登入一次會發一張權杖存在「權杖」工作表，預設 90 天後失效。");
+    setting.setColumnWidth(1, 140);
   }
   return report;
 }
 
-function randomPassword_() {
+function randomSecret_(length) {
   const chars = "abcdefghijkmnpqrstuvwxyz23456789";
   let out = "";
-  for (let index = 0; index < 8; index += 1) {
+  for (let index = 0; index < length; index += 1) {
     out += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return out;
+}
+
+function randomToken_() {
+  return (
+    randomSecret_(10) +
+    randomSecret_(10) +
+    randomSecret_(8) +
+    new Date().getTime().toString(36)
+  );
 }
 
 function password_(book) {
@@ -85,11 +104,66 @@ function password_(book) {
   return String(setting.getRange("B1").getValue() || "").trim();
 }
 
+function purgeExpiredTokens_(book) {
+  const sheet = book.getSheetByName(SHEET_TOKEN);
+  if (!sheet || sheet.getLastRow() < 2) return;
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, TOKEN_HEADERS.length).getValues();
+  const now = new Date().getTime();
+  const keep = rows.filter(function (row) {
+    const expiry = row[1] instanceof Date ? row[1].getTime() : new Date(row[1]).getTime();
+    return row[0] && expiry && expiry > now;
+  });
+  sheet.getRange(2, 1, rows.length, TOKEN_HEADERS.length).clearContent();
+  if (keep.length) sheet.getRange(2, 1, keep.length, TOKEN_HEADERS.length).setValues(keep);
+}
+
+function issueToken_(book) {
+  const sheet = book.getSheetByName(SHEET_TOKEN);
+  const now = new Date();
+  const expiry = new Date(now.getTime() + TOKEN_DAYS * 24 * 60 * 60 * 1000);
+  const token = randomToken_();
+  sheet.appendRow([token, expiry, now]);
+  return { token: token, expiry: expiry.toISOString() };
+}
+
+function validToken_(book, token) {
+  if (!token) return false;
+  const sheet = book.getSheetByName(SHEET_TOKEN);
+  if (!sheet || sheet.getLastRow() < 2) return false;
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, TOKEN_HEADERS.length).getValues();
+  const now = new Date().getTime();
+  for (let index = 0; index < rows.length; index += 1) {
+    if (String(rows[index][0]) !== String(token)) continue;
+    const expiry = rows[index][1] instanceof Date ? rows[index][1].getTime() : new Date(rows[index][1]).getTime();
+    return Boolean(expiry) && expiry > now;
+  }
+  return false;
+}
+
 function auth_(book, key) {
   const expected = password_(book);
   if (!expected) return { ok: false, error: "尚未設定密碼" };
   if (String(key || "").trim() !== expected) return { ok: false, error: "auth" };
-  return { ok: true, sheetUrl: book.getUrl() };
+  const issued = issueToken_(book);
+  return { ok: true, token: issued.token, expiry: issued.expiry, sheetUrl: book.getUrl() };
+}
+
+function logout_(book, token) {
+  const sheet = book.getSheetByName(SHEET_TOKEN);
+  if (!sheet || sheet.getLastRow() < 2) return { ok: true };
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, TOKEN_HEADERS.length).getValues();
+  const keep = rows.filter(function (row) {
+    return String(row[0]) !== String(token || "");
+  });
+  sheet.getRange(2, 1, rows.length, TOKEN_HEADERS.length).clearContent();
+  if (keep.length) sheet.getRange(2, 1, keep.length, TOKEN_HEADERS.length).setValues(keep);
+  return { ok: true };
+}
+
+function guard_(book, body) {
+  if (body && body.token && validToken_(book, body.token)) return { ok: true };
+  if (body && body.key && String(body.key).trim() === password_(book)) return { ok: true };
+  return { ok: false, error: "auth" };
 }
 
 function report_(book, body) {
@@ -126,7 +200,7 @@ function report_(book, body) {
 }
 
 function counts_(book, body) {
-  const check = auth_(book, body.key);
+  const check = guard_(book, body);
   if (!check.ok) return { ok: false, error: "auth" };
 
   const examId = String(body.examId || "").trim();
@@ -177,7 +251,7 @@ function counts_(book, body) {
 }
 
 function clear_(book, body) {
-  const check = auth_(book, body.key);
+  const check = guard_(book, body);
   if (!check.ok) return { ok: false, error: "auth" };
 
   const level = Number(body.level) || 1;
@@ -202,6 +276,7 @@ function clear_(book, body) {
     }
     archived.push([now, level].concat(row));
   });
+
   if (archived.length) {
     history.getRange(history.getLastRow() + 1, 1, archived.length, HISTORY_HEADERS.length).setValues(archived);
   }
