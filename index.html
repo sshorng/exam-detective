@@ -175,12 +175,6 @@
       box-shadow: 0 0 0 2px rgba(180, 101, 19, 0.15);
     }
 
-    .form-item .form-hint {
-      margin-top: 6px;
-      font-size: 0.78rem;
-      color: var(--ink-muted);
-      letter-spacing: 0.02em;
-    }
 
     .selector-bar {
       display: flex;
@@ -2580,11 +2574,10 @@
       <div class="case-file-form">
         <div class="form-item">
           <label for="studentClass">班級</label>
-          <input type="text" id="studentClass" placeholder="" value="">
-          <div class="form-hint">例：904</div>
+          <input type="text" id="studentClass" placeholder="例：904" value="">
         </div>
         <div class="form-item">
-          <label for="studentSeat">座號（選填）</label>
+          <label for="studentSeat">座號</label>
           <input type="text" id="studentSeat" placeholder="例：05" value="">
         </div>
       </div>
@@ -3191,8 +3184,8 @@
       startInvestigation() {
         const classInput = document.getElementById("studentClass").value.trim();
         const seatInput = document.getElementById("studentSeat").value.trim();
-        if (!classInput) {
-          this.showToast("請先填入班級，例如 904，老師才看得到班級統計。");
+        if (!classInput || !seatInput) {
+          this.showToast("請先填入班級與座號，例如 904 與 05，老師才看得到班級統計。");
           return;
         }
         AppState.studentClass = classInput;
