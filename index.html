@@ -2413,29 +2413,47 @@
 
     .hotspot-toolbar {
       display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: stretch;
-      flex: 1 1 320px;
-    }
-
-    .hotspot-toolbar-row {
-      display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      flex: 1 1 100%;
     }
 
-    .hotspot-toolbar-row .btn-chip {
+    .hotspot-toolbar > * {
+      flex: 0 0 auto;
+    }
+
+    .hotspot-toolbar .btn-chip,
+    .hotspot-toolbar select,
+    .hotspot-toolbar .hotspot-sheet-btn {
       display: inline-flex;
       align-items: center;
+      gap: 6px;
+      height: 36px;
       min-height: 36px;
-      padding: 7px 12px;
+      padding: 0 12px;
+      font-size: 0.82rem;
+      line-height: 1;
+      white-space: nowrap;
     }
 
-    .hotspot-toolbar-secondary {
-      padding-top: 10px;
-      border-top: 1px dashed var(--paper-border);
+    .hotspot-btn-time {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--ink-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 768px) {
+      .hotspot-toolbar .btn-chip,
+      .hotspot-toolbar select,
+      .hotspot-toolbar .hotspot-sheet-btn {
+        height: 44px;
+        min-height: 44px;
+      }
     }
 
     .hotspot-group {
@@ -2474,14 +2492,6 @@
       font-family: var(--font-sans);
       background: #FFFFFF;
       color: var(--ink-primary);
-    }
-
-    .hotspot-updated {
-      margin-left: auto;
-      font-size: 0.74rem;
-      color: var(--ink-muted);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
     }
 
     .hotspot-meta {
@@ -3039,23 +3049,17 @@
             <p class="hotspot-sub">學生按下「展開神探卷宗」時會在背景自動回報題號，這裡只統計題號與班級，不含姓名與作答選項。點題號可直接跳到該題檢討。</p>
           </div>
           <div class="hotspot-toolbar">
-            <div class="hotspot-toolbar-row">
-              <select id="hotspotKlass" onchange="App.Hotspot.onKlassChange()">
-                <option value="">全部班級</option>
-              </select>
-              <div class="hotspot-group">
-                <button type="button" class="btn-chip" onclick="App.Hotspot.refresh()">更新</button>
-                <button type="button" class="btn-chip" id="hotspotAutoBtn" onclick="App.Hotspot.toggleAuto()">自動更新：開</button>
-              </div>
-              <span class="hotspot-updated" id="hotspotUpdatedAt"></span>
+            <select id="hotspotKlass" onchange="App.Hotspot.onKlassChange()">
+              <option value="">全部班級</option>
+            </select>
+            <div class="hotspot-group">
+              <button type="button" class="btn-chip" id="hotspotRefreshBtn" onclick="App.Hotspot.refresh()">更新<span class="hotspot-btn-time" id="hotspotUpdatedAt"></span></button>
+              <button type="button" class="btn-chip" id="hotspotAutoBtn" onclick="App.Hotspot.toggleAuto()">自動更新：開</button>
             </div>
-            <div class="hotspot-toolbar-row hotspot-toolbar-secondary">
-              <button type="button" class="btn-chip hotspot-danger" onclick="App.Hotspot.openClearModal(1)">清空資料</button>
-              <span id="hotspotSheetSlot"></span>
-              <span class="hotspot-toolbar-spacer"></span>
-              <button type="button" class="btn-chip" onclick="App.Hotspot.logout()">登出</button>
-              <button type="button" class="btn-chip" onclick="App.showSetup()">回題號清單</button>
-            </div>
+            <button type="button" class="btn-chip hotspot-danger" onclick="App.Hotspot.openClearModal(1)">清空資料</button>
+            <span id="hotspotSheetSlot"></span>
+            <button type="button" class="btn-chip" onclick="App.showSetup()">回題號清單</button>
+            <button type="button" class="btn-chip" onclick="App.Hotspot.logout()">登出</button>
           </div>
         </div>
 
@@ -5486,9 +5490,13 @@
         }
         const label = document.getElementById("hotspotUpdatedAt");
         if (label) {
-          label.textContent = this.lastFetchAt
-            ? "上次更新 " + this.lastFetchAt + "（" + this.lastFetchMs + " 毫秒）"
-            : "";
+          label.textContent = this.lastFetchAt ? this.lastFetchAt : "";
+          const button = document.getElementById("hotspotRefreshBtn");
+          if (button) {
+            button.title = this.lastFetchAt
+              ? "上次更新 " + this.lastFetchAt + "（" + this.lastFetchMs + " 毫秒）"
+              : "按一下立即更新";
+          }
         }
       },
 
