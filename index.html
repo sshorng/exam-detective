@@ -175,6 +175,13 @@
       box-shadow: 0 0 0 2px rgba(180, 101, 19, 0.15);
     }
 
+    .form-item .form-hint {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      letter-spacing: 0.02em;
+    }
+
     .selector-bar {
       display: flex;
       justify-content: space-between;
@@ -2573,7 +2580,8 @@
       <div class="case-file-form">
         <div class="form-item">
           <label for="studentClass">班級</label>
-          <input type="text" id="studentClass" placeholder="請打 904" value="">
+          <input type="text" id="studentClass" placeholder="" value="">
+          <div class="form-hint">例：904</div>
         </div>
         <div class="form-item">
           <label for="studentSeat">座號（選填）</label>
