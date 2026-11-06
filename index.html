@@ -1393,9 +1393,11 @@
     }
 
     .teacher-quicklist button {
+      position: relative;
       min-width: 44px;
       min-height: 34px;
       padding: 4px 10px;
+      overflow: visible;
       font-family: var(--font-sans);
       font-size: 0.82rem;
       color: var(--ink-primary);
@@ -1410,21 +1412,27 @@
     }
 
     .teacher-dot {
+      position: absolute;
+      top: -7px;
+      right: -7px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
+      min-width: 17px;
+      height: 17px;
+      padding: 0 4px;
       border-radius: 9px;
+      border: 1.5px solid #FFFFFF;
+      box-shadow: 0 1px 3px rgba(35, 28, 22, 0.25);
       font-family: var(--font-sans);
-      font-size: 0.66rem;
+      font-size: 0.6rem;
       font-weight: 700;
       font-style: normal;
       line-height: 1;
       color: #FFFFFF;
       background: var(--amber-border);
       font-variant-numeric: tabular-nums;
+      pointer-events: none;
     }
 
     .teacher-dot[data-level="2"] {
