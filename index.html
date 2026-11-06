@@ -3099,6 +3099,7 @@
       drillIndex: 0,
       drillSkipped: {},
       teacherMode: false,
+      teacherSession: false,
       
       // 紀錄各題狀態：{ [qId]: { ansSelected: null, ghostsFound: {}, stamped: false, goldNote: "" } }
       records: {}
@@ -3269,7 +3270,7 @@
         const qid = document.getElementById("teacherModeQid");
         if (qid) qid.textContent = on ? "第 " + (AppState.activeQId || 0) + " 題" : "";
         const chip = document.getElementById("teacherModeChip");
-        if (chip) chip.classList.toggle("on", on);
+        if (chip) chip.classList.toggle("on", on || Boolean(AppState.teacherSession));
         const stepText = document.querySelector("#viewInvestigate .step-banner span:last-child");
         if (stepText) {
           stepText.textContent = on
@@ -5360,6 +5361,7 @@
         const saved = this.readToken();
         if (saved) {
           this.token = saved;
+          AppState.teacherSession = true;
           this.openDashboard();
           return;
         }
@@ -5402,6 +5404,7 @@
           const result = await this.postWithRetry({ action: "auth", key: key });
           if (result && result.ok) {
             this.writeToken(result.token, result.expiry);
+            AppState.teacherSession = true;
             this.sheetUrl = result.sheetUrl || "";
             this.closeAuthModal();
             this.openDashboard();
@@ -5446,6 +5449,8 @@
             if (result.sheetUrl) this.sheetUrl = result.sheetUrl;
           } else if (result && result.error === "auth") {
             this.clearToken();
+            AppState.teacherSession = false;
+            if (App.applyTeacherMode) App.applyTeacherMode();
             this.openAuthModal();
             App.showToast("教師密碼已失效，請重新輸入。");
           } else {
@@ -5686,6 +5691,8 @@
       async logout() {
         const token = this.token;
         this.clearToken();
+        AppState.teacherSession = false;
+        if (App.applyTeacherMode) App.applyTeacherMode();
         this.counts = {};
         this.total = 0;
         this.klassCounts = {};
@@ -5704,6 +5711,10 @@
       // --- 初始化 ---------------------------------------------------
       init() {
         this.examId = this.buildExamId();
+        if (this.readToken()) {
+          AppState.teacherSession = true;
+          setTimeout(() => { if (App.applyTeacherMode) App.applyTeacherMode(); }, 0);
+        }
         this.qbVersion = this.buildQbVersion((typeof EXAM_DB !== "undefined" ? EXAM_DB : []));
         this.token = this.readToken();
         const modal = document.getElementById("hotspotAuthModal");
