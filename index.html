@@ -2627,6 +2627,62 @@
       gap: 8px;
     }
 
+    .progress-students {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 10px;
+    }
+
+    .progress-student {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 6px;
+      border: 1px solid var(--paper-border);
+      border-radius: 12px;
+      background: #FFFFFF;
+    }
+
+    .progress-student.empty {
+      background: #FBF7F0;
+      border-style: dashed;
+    }
+
+    .progress-seat {
+      font-family: var(--font-serif);
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .progress-student.mid .progress-seat,
+    .progress-student.done .progress-seat {
+      color: var(--seal-red);
+      font-weight: 700;
+    }
+
+    .progress-ring {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      position: relative;
+      background: conic-gradient(var(--seal-red) calc(var(--value, 0) * 1%), var(--paper-texture) 0);
+    }
+
+    .progress-ring::after {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: 50%;
+      background: #FFFFFF;
+    }
+
+    .progress-student.done .progress-ring {
+      background: conic-gradient(var(--seal-green) calc(var(--value, 0) * 1%), var(--paper-texture) 0);
+    }
+
     .progress-dot {
       width: 22px;
       height: 22px;
@@ -2685,9 +2741,18 @@
       margin-left: -55px;
     }
 
-    #viewProgress.progress-big .progress-dot {
-      width: 34px;
-      height: 34px;
+    #viewProgress.progress-big .progress-students {
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap: 14px;
+    }
+
+    #viewProgress.progress-big .progress-seat {
+      font-size: 1.3rem;
+    }
+
+    #viewProgress.progress-big .progress-ring {
+      width: 46px;
+      height: 46px;
     }
 
     #viewProgress.progress-big .progress-toolbar .btn-chip:not(#progressBigBtn) {
@@ -3315,7 +3380,7 @@
           </div>
         </div>
 
-        <div class="progress-dots" id="progressDots"></div>
+        <div class="progress-students" id="progressStudents"></div>
 
         <div class="progress-toolbar">
           <button type="button" class="btn-chip" onclick="App.Hotspot.refreshBoard()">更新</button>
@@ -5575,6 +5640,7 @@
       RETRY_TIMES: 2,
       AUTO_MS: 60000,
       BOARD_MS: 10000,
+      DEFAULT_SEATS: 30,
       BOARD_KLASS_KEY: "exam-detective:progress:klass",
       SNAPSHOT_KEY: "exam-detective:hotspot:snapshot",
       AUTO_KEY: "exam-detective:hotspot:auto",
@@ -5870,15 +5936,32 @@
           node.classList.toggle("hit", board.percent >= at);
         });
 
-        const dots = document.getElementById("progressDots");
-        if (dots) {
-          dots.innerHTML = "";
-          board.students.forEach((student) => {
-            const dot = document.createElement("i");
-            const level = this.rateLevel(student.rate);
-            dot.className = "progress-dot" + (level ? " l" + level : "");
-            dot.title = level ? "已完成" : "尚未開始";
-            dots.appendChild(dot);
+        const students = document.getElementById("progressStudents");
+        if (students) {
+          students.innerHTML = "";
+          const list = board.students.length
+            ? board.students
+            : Array.from({ length: this.DEFAULT_SEATS }, (unused, index) => ({
+                seat: String(index + 1),
+                rate: 0,
+                placeholder: true
+              }));
+          list.forEach((student) => {
+            const rate = Math.max(0, Math.min(100, Number(student.rate) || 0));
+            const card = document.createElement("div");
+            card.className = "progress-student" +
+              (student.placeholder ? " empty" : "") +
+              (rate >= 100 ? " done" : (rate > 0 ? " mid" : ""));
+            const seat = document.createElement("span");
+            seat.className = "progress-seat";
+            seat.textContent = String(student.seat);
+            const ring = document.createElement("span");
+            ring.className = "progress-ring";
+            ring.style.setProperty("--value", String(rate));
+            ring.title = rate + "%";
+            card.appendChild(seat);
+            card.appendChild(ring);
+            students.appendChild(card);
           });
         }
 
@@ -5887,9 +5970,11 @@
         const meta = document.getElementById("progressMetaText");
         if (meta) {
           const scope = this.boardKlass ? "班級 " + this.boardKlass : "全部班級";
-          meta.textContent = scope + "・已完成 " + board.done + " / " + board.total + " 題・已開始 " +
-            board.started + " 人・全部完成 " + board.finished + " 人" +
-            (board.at ? "・更新 " + board.at : "");
+          const head = board.students.length
+            ? scope + "・已完成 " + board.done + " / " + board.total + " 題・已開始 " + board.started +
+              " 人・全部完成 " + board.finished + " 人"
+            : scope + "・尚無資料，先顯示預設 " + this.DEFAULT_SEATS + " 個座號";
+          meta.textContent = head + (board.at ? "・更新 " + board.at : "");
         }
 
         const muteBtn = document.getElementById("progressMuteBtn");
