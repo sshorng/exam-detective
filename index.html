@@ -2548,6 +2548,7 @@
     }
 
     .progress-stage {
+      flex: 0 0 auto;
       position: relative;
       padding: 46px 30px 30px;
       border-radius: 16px;
@@ -2627,60 +2628,94 @@
       gap: 8px;
     }
 
-    .progress-students {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-      gap: 10px;
-    }
-
-    .progress-student {
+    .progress-lanes {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      padding: 10px 6px;
-      border: 1px solid var(--paper-border);
+      gap: 7px;
+      flex: 0 0 auto;
+    }
+
+    .progress-empty {
+      margin: 0;
+      padding: 22px 16px;
+      border: 1px dashed var(--paper-border);
       border-radius: 12px;
-      background: #FFFFFF;
-    }
-
-    .progress-student.empty {
       background: #FBF7F0;
-      border-style: dashed;
+      color: var(--ink-muted);
+      font-size: 0.86rem;
+      text-align: center;
     }
 
-    .progress-seat {
+    .progress-lane {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      align-items: center;
+      gap: 10px;
+      min-height: 22px;
+      flex: 0 0 auto;
+    }
+
+    .lane-seat {
       font-family: var(--font-serif);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: var(--ink-muted);
+      text-align: right;
       font-variant-numeric: tabular-nums;
       line-height: 1;
     }
 
-    .progress-student.mid .progress-seat,
-    .progress-student.done .progress-seat {
+    .progress-lane.mid .lane-seat,
+    .progress-lane.done .lane-seat {
       color: var(--seal-red);
       font-weight: 700;
     }
 
-    .progress-ring {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      position: relative;
-      background: conic-gradient(var(--seal-red) calc(var(--value, 0) * 1%), var(--paper-texture) 0);
+    .progress-lane.done .lane-seat {
+      color: var(--seal-green);
     }
 
-    .progress-ring::after {
-      content: "";
+    .lane-track {
+      position: relative;
+      height: 14px;
+      border-radius: 7px;
+      background: repeating-linear-gradient(90deg, #EEE3D2 0 10px, #F6EFE2 10px 20px);
+      box-shadow: inset 0 1px 2px rgba(35, 28, 22, 0.06);
+    }
+
+    .lane-fill {
       position: absolute;
-      inset: 5px;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      border-radius: 7px;
+      background: linear-gradient(90deg, #E7C88E, var(--seal-red));
+      transition: width 0.8s ease;
+    }
+
+    .progress-lane.done .lane-fill {
+      background: linear-gradient(90deg, #A9C7B4, var(--seal-green));
+    }
+
+    .lane-head {
+      position: absolute;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      margin-left: -8px;
+      transform: translateY(-50%);
       border-radius: 50%;
       background: #FFFFFF;
+      border: 3px solid var(--seal-red);
+      transition: left 0.8s ease;
     }
 
-    .progress-student.done .progress-ring {
-      background: conic-gradient(var(--seal-green) calc(var(--value, 0) * 1%), var(--paper-texture) 0);
+    .progress-lane.done .lane-head {
+      border-color: var(--seal-green);
+    }
+
+    .progress-lane.empty .lane-head {
+      display: none;
     }
 
     .progress-dot {
@@ -2741,18 +2776,28 @@
       margin-left: -55px;
     }
 
-    #viewProgress.progress-big .progress-students {
-      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    #viewProgress.progress-big .progress-lanes {
+      gap: 10px;
+    }
+
+    #viewProgress.progress-big .progress-lane {
+      grid-template-columns: 60px 1fr;
       gap: 14px;
     }
 
-    #viewProgress.progress-big .progress-seat {
-      font-size: 1.3rem;
+    #viewProgress.progress-big .lane-seat {
+      font-size: 1.15rem;
     }
 
-    #viewProgress.progress-big .progress-ring {
-      width: 46px;
-      height: 46px;
+    #viewProgress.progress-big .lane-track {
+      height: 20px;
+      border-radius: 10px;
+    }
+
+    #viewProgress.progress-big .lane-head {
+      width: 22px;
+      height: 22px;
+      margin-left: -11px;
     }
 
     #viewProgress.progress-big .progress-toolbar .btn-chip:not(#progressBigBtn) {
@@ -3380,7 +3425,7 @@
           </div>
         </div>
 
-        <div class="progress-students" id="progressStudents"></div>
+        <div class="progress-lanes" id="progressStudents"></div>
 
         <div class="progress-toolbar">
           <button type="button" class="btn-chip" onclick="App.Hotspot.refreshBoard()">更新</button>
@@ -5640,7 +5685,6 @@
       RETRY_TIMES: 2,
       AUTO_MS: 60000,
       BOARD_MS: 10000,
-      DEFAULT_SEATS: 30,
       BOARD_KLASS_KEY: "exam-detective:progress:klass",
       SNAPSHOT_KEY: "exam-detective:hotspot:snapshot",
       AUTO_KEY: "exam-detective:hotspot:auto",
@@ -5939,29 +5983,39 @@
         const students = document.getElementById("progressStudents");
         if (students) {
           students.innerHTML = "";
-          const list = board.students.length
-            ? board.students
-            : Array.from({ length: this.DEFAULT_SEATS }, (unused, index) => ({
-                seat: String(index + 1),
-                rate: 0,
-                placeholder: true
-              }));
+          const list = board.students.slice().sort((left, right) => {
+            return (Number(left.seat) - Number(right.seat)) ||
+              String(left.seat).localeCompare(String(right.seat));
+          });
+          if (!list.length) {
+            const note = document.createElement("p");
+            note.className = "progress-empty";
+            note.textContent = "目前尚無進度資料，學生開始訂正並蓋章後，這裡會自動出現座號與進度。";
+            students.appendChild(note);
+          }
           list.forEach((student) => {
             const rate = Math.max(0, Math.min(100, Number(student.rate) || 0));
-            const card = document.createElement("div");
-            card.className = "progress-student" +
+            const lane = document.createElement("div");
+            lane.className = "progress-lane" +
               (student.placeholder ? " empty" : "") +
               (rate >= 100 ? " done" : (rate > 0 ? " mid" : ""));
+            lane.title = "座號 " + student.seat + "・" + rate + "%";
             const seat = document.createElement("span");
-            seat.className = "progress-seat";
+            seat.className = "lane-seat";
             seat.textContent = String(student.seat);
-            const ring = document.createElement("span");
-            ring.className = "progress-ring";
-            ring.style.setProperty("--value", String(rate));
-            ring.title = rate + "%";
-            card.appendChild(seat);
-            card.appendChild(ring);
-            students.appendChild(card);
+            const track = document.createElement("span");
+            track.className = "lane-track";
+            const fill = document.createElement("i");
+            fill.className = "lane-fill";
+            fill.style.width = rate + "%";
+            const head = document.createElement("b");
+            head.className = "lane-head";
+            head.style.left = rate + "%";
+            track.appendChild(fill);
+            track.appendChild(head);
+            lane.appendChild(seat);
+            lane.appendChild(track);
+            students.appendChild(lane);
           });
         }
 
@@ -5973,7 +6027,7 @@
           const head = board.students.length
             ? scope + "・已完成 " + board.done + " / " + board.total + " 題・已開始 " + board.started +
               " 人・全部完成 " + board.finished + " 人"
-            : scope + "・尚無資料，先顯示預設 " + this.DEFAULT_SEATS + " 個座號";
+            : scope + "・尚無進度資料";
           meta.textContent = head + (board.at ? "・更新 " + board.at : "");
         }
 
