@@ -22,7 +22,6 @@ const SHEET_HISTORY = "歷史";
 const SHEET_SETTING = "設定";
 const SHEET_TOKEN = "權杖";
 const SHEET_PROGRESS = "進度";
-const DEDUPE_MS = 10000;
 const TOKEN_DAYS = 90;
 const CACHE_TTL = 30;
 const BOARD_TTL = 10;
@@ -67,7 +66,7 @@ function doPost(e) {
     if (action === "board") return json_(board_(book, body));
     if (action === "counts") return json_(counts_(book, body));
     if (action === "clear") return json_(clear_(book, body));
-    if (action === "info") return json_({ ok: true, ver: "hotspot-7" });
+    if (action === "info") return json_({ ok: true, ver: "hotspot-8" });
     return json_({ ok: false, error: "unknown-action" });
   } catch (error) {
     return json_({ ok: false, error: String((error && error.message) || error) });
@@ -75,13 +74,12 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, ver: "hotspot-7" });
+  return json_({ ok: true, ver: "hotspot-8" });
 }
 
 function json_(value) {
   return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);
 }
-
 function ensureSheets_(book) {
   const report = book.getSheetByName(SHEET_REPORT) || book.insertSheet(SHEET_REPORT);
   if (report.getLastRow() === 0) report.appendRow(REPORT_HEADERS);
@@ -230,17 +228,30 @@ function progress_(book, body) {
   const lastRow = sheet.getLastRow();
   if (lastRow > 1) {
     const rows = sheet.getRange(2, 1, lastRow - 1, PROGRESS_HEADERS.length).getValues();
+    let hit = -1;
+    const extra = [];
     for (let index = 0; index < rows.length; index += 1) {
-      if (String(rows[index][1]) === examId && String(rows[index][3]) === klass && String(rows[index][4]) === seat) {
-        const prevDone = Math.max(0, Number(rows[index][5]) || 0);
-        const prevTotal = Math.max(0, Number(rows[index][6]) || 0);
-        const sameRound = prevTotal === total;
-        const nextDone = sameRound ? Math.max(prevDone, done) : done;
-        row[5] = nextDone;
-        sheet.getRange(index + 2, 1, 1, PROGRESS_HEADERS.length).setValues([row]);
-        bumpEpoch_(examId);
-        return { ok: true, updated: true, done: nextDone, kept: nextDone !== done };
+      if (String(rows[index][1]) !== examId) continue;
+      if (squash_(rows[index][3]) !== klass) continue;
+      if (squashSeat_(rows[index][4]) !== seat) continue;
+      if (hit < 0) hit = index;
+      else extra.push(index);
+    }
+    if (hit >= 0) {
+      const prevDone = Math.max(0, Number(rows[hit][5]) || 0);
+      const prevTotal = Math.max(0, Number(rows[hit][6]) || 0);
+      const sameRound = prevTotal === total;
+      const nextDone = sameRound ? Math.max(prevDone, done) : done;
+      row[5] = nextDone;
+      sheet.getRange(hit + 2, 1, 1, PROGRESS_HEADERS.length).setValues([row]);
+      // 同一位學生若因座號寫法不同（1 與 01、全形數字）留下多列，順手整併成一列
+      if (extra.length) {
+        extra.sort(function (left, right) { return right - left; }).forEach(function (index) {
+          sheet.deleteRow(index + 2);
+        });
       }
+      bumpEpoch_(examId);
+      return { ok: true, updated: true, done: nextDone, kept: nextDone !== done, merged: extra.length };
     }
   }
   sheet.appendRow(row);
@@ -377,23 +388,30 @@ function report_(book, body) {
 
   const report = book.getSheetByName(SHEET_REPORT);
   const lastRow = report.getLastRow();
-  const recent = lastRow > 1 ? report.getRange(Math.max(2, lastRow - 400), 1, Math.min(400, lastRow - 1), REPORT_HEADERS.length).getValues() : [];
-  const now = new Date();
+  // 以「考卷＋版本＋客戶端＋題號」去重：同一個學生同一題只記一次，
+  // 之後重新整理、隔幾分鐘再按一次卷宗都不會重複計數。
   const seen = {};
-  recent.forEach(function (row) {
-    const stamp = row[0] instanceof Date ? row[0].getTime() : new Date(row[0]).getTime();
-    if (!stamp || now.getTime() - stamp > DEDUPE_MS) return;
-    seen[String(row[2]) + "|" + String(row[7]) + "|" + String(row[6])] = true;
-  });
+  if (lastRow > 1) {
+    const rows = report.getRange(2, 1, lastRow - 1, REPORT_HEADERS.length).getValues();
+    rows.forEach(function (row) {
+      if (String(row[2]) !== examId) return;
+      if (String(row[3]) !== ver) return;
+      seen[String(row[7]) + "|" + String(row[6])] = true;
+    });
+  }
 
+  const now = new Date();
   const batch = client + "-" + now.getTime();
   const stampText = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
   const rows = [];
+  const queued = {};
   qids.forEach(function (qid) {
-    if (seen[examId + "|" + client + "|" + qid]) return;
+    if (queued[qid]) return;
+    if (seen[client + "|" + qid]) return;
+    queued[qid] = true;
     rows.push([stampText, batch, examId, ver, klass, seat, qid, client]);
   });
-  if (!rows.length) return { ok: true, added: 0 };
+  if (!rows.length) return { ok: true, added: 0, dedup: true };
   report.getRange(report.getLastRow() + 1, 1, rows.length, REPORT_HEADERS.length).setValues(rows);
   bumpEpoch_(examId);
   return { ok: true, added: rows.length };
@@ -421,9 +439,10 @@ function counts_(book, body) {
 
   const rows = report.getRange(2, 1, lastRow - 1, REPORT_HEADERS.length).getValues();
   const counts = {};
-  const batches = {};
-  const klassBatches = {};
+  const people = {};
+  const klassPeople = {};
   const roster = {};
+  const seen = {};
   let since = "";
   rows.forEach(function (row) {
     if (String(row[2]) !== examId) return;
@@ -432,26 +451,29 @@ function counts_(book, body) {
     if (klassFilter && klass !== klassFilter) return;
     const qid = Number(row[6]);
     if (!qid) return;
-    counts[qid] = (counts[qid] || 0) + 1;
-    const batch = String(row[1] || "");
-    batches[batch] = true;
-    klassBatches[klass] = klassBatches[klass] || {};
-    klassBatches[klass][batch] = true;
     const seat = String(row[5] || "");
+    const person = String(row[7] || "") || (klass + "-" + seat);
+    const dedupeKey = person + "|" + qid;
+    if (seen[dedupeKey]) return;
+    seen[dedupeKey] = true;
+    counts[qid] = (counts[qid] || 0) + 1;
+    people[person] = true;
+    klassPeople[klass] = klassPeople[klass] || {};
+    klassPeople[klass][person] = true;
     if (seat) roster[klass + "-" + seat] = true;
     const stamp = String(row[0] || "");
     if (stamp && (!since || stamp < since)) since = stamp;
   });
 
   const klassCounts = {};
-  Object.keys(klassBatches).forEach(function (name) {
-    klassCounts[name] = Object.keys(klassBatches[name]).length;
+  Object.keys(klassPeople).forEach(function (name) {
+    klassCounts[name] = Object.keys(klassPeople[name]).length;
   });
 
   const payload = {
     ok: true,
     counts: counts,
-    total: Object.keys(batches).length,
+    total: Object.keys(people).length,
     klassCounts: klassCounts,
     roster: Object.keys(roster).sort(),
     since: since,

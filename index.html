@@ -6916,7 +6916,7 @@
 
         tiles.innerHTML = "";
         [
-          { num: this.total, label: "回報份數" },
+          { num: this.total, label: "回報人數" },
           { num: this.coveredCount(), label: "有人回報的題數" },
           { num: this.topRate() + "%", label: "最高錯誤率" }
         ].forEach((item) => {
@@ -7020,7 +7020,7 @@
         classes.forEach((name) => {
           const option = document.createElement("option");
           option.value = name;
-          option.textContent = name + "（" + this.klassCounts[name] + " 份）";
+          option.textContent = name + "（" + this.klassCounts[name] + " 人）";
           select.appendChild(option);
         });
         select.value = this.klassFilter;
